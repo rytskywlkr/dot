@@ -495,7 +495,7 @@ editor: Editor
 		new Widget('color-picker');
 		new Widget('view');
 		new Widget('layers');
-		
+		console.log($('view').lastChild);
 		preview = $('view').lastChild.getContext('2d');
 	}
 
@@ -616,9 +616,10 @@ editor: Editor
 		$.fadeOut($('overlay'));
 		KeyMapper.bind(document, 'trigger');
 		const index = parseInt($.q('#new-image input[name="size"]:checked').value, 10);
-		const size = [16, 32, 48, 64][index];
-		createImage(size, size);
-		selection.indexData = createIndexData(size, size);
+		const group_warp = $.q('group_warp').value;
+		const group_weft = $.q('group_weft').value;
+		createImage(group_warp, group_weft);
+		selection.indexData = createIndexData(group_warp, group_weft);
 		resize();
 		ctx.fillStyle = palette[0];
 		ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);

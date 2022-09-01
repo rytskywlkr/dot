@@ -495,6 +495,7 @@ editor: Editor
 		new Widget('color-picker');
 		new Widget('view');
 		new Widget('layers');
+		console.log($('view').lastChild);
 		
 		preview = $('view').lastChild.getContext('2d');
 	}
