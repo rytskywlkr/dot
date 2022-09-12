@@ -218,6 +218,37 @@ function clearDot(ctx, x, y, indexData, scale, padding = 1) {
   if (indexData) indexData.data[y * indexData.width + x] = 0;
 }
 
+function clearDots(
+  ctx,
+  start_x,
+  start_y,
+  end_x,
+  end_y,
+  indexData,
+  scale,
+  padding = 1
+) {
+  let s = scale,
+    b = s - padding;
+  for (let x = start_x; x <= end_x; x++) {
+    for (let y = start_y; y <= end_y; y++) {
+      ctx.clearRect(x * s + padding, y * s - padding, b, b);
+      if (indexData) indexData.data[y * indexData.width + x] = 0;
+    }
+  }
+}
+
+// ドットの表示
+function drawErrorRow(errorCtx, start_x, end_x, start_y, end_y, scale) {
+  let padding = 1;
+  errorCtx.fillRect(
+    start_x * scale,
+    start_y * scale - padding,
+    scale + scale * (end_x - start_x),
+    scale + scale * (end_y - start_y)
+  );
+}
+
 // 直線の描画
 function drawLine(
   ctx,

@@ -156,7 +156,7 @@ editor: Editor
     canvas,
     ctx,
     work,
-    backgroundCtx,
+    errorCtx,
     preview,
     selectionCtx,
     indexData,
@@ -242,8 +242,8 @@ editor: Editor
     option.canvasHeight = canvas.height;
     work.canvas.width = canvas.width;
     work.canvas.height = canvas.height;
-    backgroundCtx.canvas.width = canvas.width;
-    backgroundCtx.canvas.height = canvas.height;
+    errorCtx.canvas.width = canvas.width;
+    errorCtx.canvas.height = canvas.height;
     if (selection.enable) {
     }
     for (let i = 0; i < Layer.count(); i++) {
@@ -255,6 +255,8 @@ editor: Editor
     ctx.scale(1, -1); // 上記に伴いY軸の図り方を反転
     work.translate(0, canvas.height); // 原点を左下に移動
     work.scale(1, -1); // 上記に伴いY軸の図り方を反転
+    errorCtx.translate(0, canvas.height); // 原点を左下に移動
+    errorCtx.scale(1, -1); // 上記に伴いY軸の図り方を反転
   }
 
   function zoom() {
@@ -466,8 +468,8 @@ editor: Editor
     // 選択範囲のレイヤーを作成
     selectionCtx = document.getElementById('selection').getContext('2d');
 
-    // 背景用レイヤー
-    backgroundCtx = document.getElementById('background').getContext('2d');
+    // エラー用レイヤー
+    errorCtx = document.getElementById('background').getContext('2d');
 
     // パレットデータの作成
     paletteData = createPaletteData(256);
@@ -547,8 +549,6 @@ editor: Editor
     drawIndexedImage(ctx, indexData, palette, option, paletteData);
     grid();
     drawPreview();
-    backgroundCtx.canvas.style.backgroundColor =
-      palette[Palette.getTransparentIndex()];
     Layer.clear();
     Layer.set(ctx, ctx.canvas, indexData);
   };
@@ -642,68 +642,101 @@ editor: Editor
       new_hikikomi_data[i] = new Uint8Array(option.orimono.waku_maisu);
     }
 
+    let monsen_rows = []; // 組織図の列ごとに紋栓図の何列目かを保管する配列
     for (let i = 0; i < option.orimono.soshiki_tate; i++) {
       let monsen_row; // 紋栓図の列番号（左から何列目か）
       for (let j = 0; j < new_monsen_data.length; j++) {
+        // 紋栓図の列が空白の場合は、組織図から紋栓図の列を作成する
+        // または紋栓図の列の内容が組織図の列の内容と同じだった場合は同じ列として扱う
         if (
           new_monsen_data[j].every((e) => e === 0) ||
           JSON.stringify(new_monsen_data[j]) ==
             JSON.stringify(option.orimono.soshiki_data[i])
         ) {
-          console.log('i:' + i + ' j:' + j);
           monsen_row = j;
           new_monsen_data[monsen_row] = option.orimono.soshiki_data[i];
           new_hikikomi_data[i][monsen_row] = 1;
           break;
         }
       }
+      // 紋栓図の列と合致しない場合はnull。次の処理で赤列にしてエラー出力
+      monsen_rows[i] = monsen_row ?? null;
+    }
 
-      // 紋栓図は先に全てクリアする
+    errorCtx.fillStyle = 'rgb(255, 194, 194)';
+    for (let i = 0; i < monsen_rows.length; i++) {
+      if (monsen_rows[i] == null) {
+        drawErrorRow(
+          errorCtx,
+          option.orimono.soshiki_min_x + i,
+          option.orimono.soshiki_min_x + i,
+          option.orimono.soshiki_min_y,
+          option.orimono.soshiki_max_y,
+          option.scale
+        );
+      }
+    }
 
-      if (monsen_row !== undefined) {
-        for (let k = 0; k < option.orimono.soshiki_yoko; k++) {
-          let x = monsen_row;
-          let y = k + option.orimono.monsen_min_y;
-          if (option.orimono.soshiki_data[i][k] == 0) {
-            clearDotOrimono(ctx, x, y, indexData, option);
-            console.log('clear monsen x:' + x + ' y:' + y);
-          } else {
-            console.log('draw monsen x:' + x + ' y:' + y);
-            drawDotOrimono(
-              ctx,
-              x,
-              y,
-              indexData,
-              1, // 紋栓図は必ず1
-              option.scale,
-              option
-            );
-          }
+    if (monsen_rows.some((e) => e === null)) {
+      // 1つでも紋栓を計算できなければ処理終了
+      toastr.error('綜絖枚数内で紋栓を計算できませんでした', '', {
+        timeOut: 2000,
+      });
+      return;
+    }
+
+    // 紋栓図、引込図は先に全てクリアする
+    clearDots(
+      ctx,
+      option.orimono.monsen_min_x,
+      option.orimono.monsen_min_y,
+      option.orimono.monsen_max_x,
+      option.orimono.monsen_max_y,
+      indexData,
+      option.scale
+    );
+    clearDots(
+      ctx,
+      option.orimono.hikikomi_min_x,
+      option.orimono.hikikomi_min_y,
+      option.orimono.hikikomi_max_x,
+      option.orimono.hikikomi_max_y,
+      indexData,
+      option.scale
+    );
+
+		for (let i = 0; i < option.orimono.soshiki_tate; i++) {
+			// 紋線図を作成
+      for (let k = 0; k < option.orimono.soshiki_yoko; k++) {
+        let x = monsen_rows[i];
+        let y = k + option.orimono.monsen_min_y;
+        if (option.orimono.soshiki_data[i][k] != 0){
+          drawDotOrimono(
+            ctx,
+            x,
+            y,
+            indexData,
+            1, // 紋栓図は必ず1
+            option.scale,
+            option
+          );
         }
-        for (let k = 0; k < option.orimono.waku_maisu; k++) {
-          let x = i + option.orimono.hikikomi_min_x;
-          let y = k + option.orimono.hikikomi_min_y;
-          if (monsen_row !== undefined && k == monsen_row) {
-            drawDotOrimono(
-              ctx,
-              x,
-              y,
-              indexData,
-              1, // 引込図は必ず1
-              option.scale,
-              option
-            );
-          } else {
-            clearDotOrimono(ctx, x, y, indexData, option);
-          }
+			}
+			// 引込図を作成
+      for (let k = 0; k < option.orimono.waku_maisu; k++) {
+        let x = i + option.orimono.hikikomi_min_x;
+        let y = k + option.orimono.hikikomi_min_y;
+        if (k == monsen_rows[i]) {
+          drawDotOrimono(
+            ctx,
+            x,
+            y,
+            indexData,
+            1, // 引込図は必ず1
+            option.scale,
+            option
+          );
         }
-      } else {
-        // 対象の組織図の列の引込図に紋栓図の列番号が指定されており、
-        // 紋栓図と組織図の内容が異なる場合は、
-        toastr.error('綜絖枚数内で紋栓を計算できませんでした', '', {
-          timeOut: 2000,
-        });
-        break;
       }
     }
     option.orimono.monsen_data = new_monsen_data.map((list) => ({ ...list })); // ディープコピー
@@ -1028,8 +1061,6 @@ editor: Editor
       );
     }
     drawPreview();
-    backgroundCtx.canvas.style.backgroundColor =
-      palette[Palette.getTransparentIndex()];
   });
 
   Palette.setFrontColor(1);
@@ -1795,8 +1826,6 @@ editor: Editor
       Palette.setPaletteData(paletteData, true);
       Palette.setFrontColor(0);
       Palette.setTransparentIndex(data.transparent);
-      backgroundCtx.canvas.style.backgroundColor =
-        palette[Palette.getTransparentIndex()];
       palette = Palette.getPaletteData();
       zoom();
       grid();
