@@ -22,7 +22,7 @@
 
 #editor-canvas #canvas,
 #editor-canvas #background {
-	border: 1px solid #AAA;
+	/* border: 1px solid #AAA; */
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -168,8 +168,8 @@
 
 #new-image {
 	position: absolute;
-	top: 50%;
-	left: 50%;
+	top: 25%;
+	left: 25%;
 	z-index: 255;
 	margin-top: -120px;
 	margin-left: -120px;
@@ -429,6 +429,12 @@
 	text-decoration: underline;
 }
 
+.editor-tools li span {
+	margin-left: -1px;
+	margin-top: -1px;
+	color: #777;
+}
+
 .editor-tools li:hover {
 /*	background-position: 0 -24px;*/
 	border: 1px solid #AAA;
@@ -449,157 +455,6 @@
 	background-image: -o-linear-gradient(#E7E7E7, #DDD 25%, #F7F7F7);
 	background-image: linear-gradient(#E7E7E7, #DDD 25%, #F7F7F7);
 	box-shadow: inset 0 1px 3px 0 rgba(0, 0, 0, 0.2);
-}
-
-.editor-tools #pen:before {
-	content: url("../images/pen_icon.png");
-}
-
-.editor-tools #paint:before {
-	content: url("../images/paint_icon.png");
-}
-
-.editor-tools #line:before {
-	content: url("../images/line_icon.png");
-}
-
-.editor-tools #rect:before {
-	content: url("../images/rect_icon.png");
-}
-
-.editor-tools #frect:before {
-	content: url("../images/fill_rect_icon.png");
-}
-
-.editor-tools #ellipse:before {
-	content: url("../images/ellipse_icon.png");
-}
-
-.editor-tools #fellipse:before {
-	content: url("../images/fill_ellipse_icon.png");
-}
-
-.editor-tools #zoomin:before {
-	content: url("../images/zoomin_icon.png");
-/*    width: 24px;*/
-/*    height: 24px;*/
-/*    content: " ";*/
-/*    background-image: url("../images/zoomin_icon.png");*/
-/*    background-position: 0 0;*/
-}
-
-.editor-tools #zoomout:before {
-	content: url("../images/zoomout_icon.png");
-}
-
-.editor-tools #grid:before {
-	content: url("../images/grid_icon.png");
-}
-
-.editor-tools #fliph:before {
-	content: url("../images/flip_h_icon.png");
-}
-
-.editor-tools #flipv:before {
-	content: url("../images/flip_v_icon.png");
-}
-
-.editor-tools #rotater:before {
-	content: url("../images/rotate_right_icon.png");
-}
-
-.editor-tools #select:before {
-	content: url("../images/selection_icon.png");
-}
-
-.editor-tools #upload:before {
-	content: url("../images/upload_icon.png");
-}
-
-.editor-tools #download:before {
-	content: url("../images/download_icon.png");
-}
-
-.editor-tools #undo:before {
-	content: url("../images/undo_icon.png");
-}
-
-.editor-tools #redo:before {
-	content: url("../images/redo_icon.png");
-}
-
-.editor-tools #copy:before {
-	content: url("../images/copy_icon.png");
-}
-
-.editor-tools #dropper:before {
-	content: url("../images/dropper2_icon.png");
-}
-
-.editor-tools #layer:before {
-	content: url("../images/layer_icon.png");
-}
-
-.editor-tools #twitter:before {
-	content: url("../images/twitter_icon.png");
-}
-
-.editor-tools #save:before {
-	content: url("../images/upload_icon.png");
-}
-
-.editor-tools #load:before {
-	content: url("../images/download_icon.png");
-}
-
-.editor-tools #upload {
-	border: 1px solid #D63;
-	box-shadow: rgba(255, 255, 255, 0.2) 0 1px 0 0 inset, rgba(255, 200, 100, 0.8) 0 1px 4px 0;
-}
-
-.editor-tools #twitter {
-	border: 1px solid #0AE;
-	box-shadow: rgba(255, 255, 255, 0.2) 0 1px 0 0 inset, rgba(0, 172, 238, 0.4) 0 1px 4px 0;
-}
-
-.editor-tools #outline:before {
-	content: url("../images/outline_icon.png");
-}
-
-.editor-tools #shiftl:before {
-	content: url("../images/shift_l_icon.png");
-}
-
-.editor-tools #shiftr:before {
-	content: url("../images/shift_r_icon.png");
-}
-
-.editor-tools #shiftu:before {
-	content: url("../images/shift_u_icon.png");
-}
-
-.editor-tools #shiftd:before {
-	content: url("../images/shift_d_icon.png");
-}
-
-.editor-tools #tools:before {
-	content: url("../images/show_tools_icon.png");
-}
-
-.editor-tools #open-image:before {
-	content: url("../images/image_open_icon.png");
-}
-
-.editor-tools #transparent:before {
-	content: url("../images/transparent_icon.png");
-}
-
-.editor-tools #scroll:before {
-	content: url("../images/scroll_icon.png");
-}
-
-.editor-tools #tone:before {
-	content: url("../images/tone_icon.png");
 }
 
 .editor-tools #open-image label {

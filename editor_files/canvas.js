@@ -66,17 +66,154 @@ function drawSelectionRegion(ctx, x0, y0, x1, y1, scale) {
 }
 
 // ドットの表示
-function drawDot(ctx, x, y, indexData, paletteIndex, scale, padding = 0) {
+function drawDotOrimono(ctx, x, y, indexData, paletteIndex, scale, option, padding = 1) {
 	let s = scale,
 		b = s - padding;
-	ctx.fillRect(x * s, y * s, b, b);
-	if(indexData) indexData.data[y * indexData.width + x] = paletteIndex;
+	if (
+    option.orimono.soshiki_min_x <= x &&
+    x < option.orimono.soshiki_max_x &&
+    option.orimono.soshiki_min_y <= y &&
+    y < option.orimono.soshiki_max_y
+	) {
+    // 組織図にドットを描画する
+    // 組織図の場合は1つのドットではなく、基本サイズ毎の同じ座標にドットを描画する必要がある
+    option.orimono.soshiki_data[x - option.orimono.soshiki_min_x][
+      y - option.orimono.soshiki_min_y
+    ] = paletteIndex;
+    let dot_at_kihon_x = 0,
+      dot_at_kihon_y = 0;
+    for (let i = 0; i < option.orimono.kihon_data.length; i++) {
+      if (
+        option.orimono.kihon_data[i].kihon_min_x <= x &&
+        x <= option.orimono.kihon_data[i].kihon_max_x &&
+        option.orimono.kihon_data[i].kihon_min_y <= y &&
+        y <= option.orimono.kihon_data[i].kihon_max_y
+      ) {
+        dot_at_kihon_x = x - option.orimono.kihon_data[i].kihon_min_x;
+        dot_at_kihon_y = y - option.orimono.kihon_data[i].kihon_min_y;
+        break;
+      }
+    }
+		for (let i = 0; i < option.orimono.kihon_data.length; i++) {
+			// 表全体の一番左下からみた座標（基本毎の最小座標と基本毎の座標を加算）
+      let x_at_all = option.orimono.kihon_data[i].kihon_min_x + dot_at_kihon_x;
+			let y_at_all = option.orimono.kihon_data[i].kihon_min_y + dot_at_kihon_y;
+			drawDot(ctx, x_at_all, y_at_all, indexData, paletteIndex, scale);
+			// 基本図の一番左下からみた座標（上記から枠枚数と空白1を減算）
+			let x_at_soshiki = x_at_all - option.orimono.soshiki_min_x;
+      let y_at_soshiki = y_at_all - option.orimono.soshiki_min_y;
+			option.orimono.soshiki_data[x_at_soshiki][y_at_soshiki] = paletteIndex;
+    }
+  } else if (
+    option.orimono.monsen_min_x <= x &&
+    x < option.orimono.monsen_max_x &&
+    option.orimono.monsen_min_y <= y &&
+    y < option.orimono.monsen_max_y
+	) {
+    // 紋栓図にドットを描画する
+    // 紋栓図の場合は1つのドットを描画するだけ
+    drawDot(ctx, x, y, indexData, paletteIndex, scale);
+    option.orimono.monsen_data[x - option.orimono.monsen_min_x][
+      y - option.orimono.monsen_min_y
+    ] = paletteIndex;
+  } else if (
+    option.orimono.hikikomi_min_x <= x &&
+    x < option.orimono.hikikomi_max_x &&
+    option.orimono.hikikomi_min_y <= y &&
+    y < option.orimono.hikikomi_max_y
+	) {
+    // 引込図にドットを描画する
+    // 引込図の場合は1列に1ドットと決まっているので、列のドットをクリアしてからドットを描画する
+    for (let i = 0; i < option.orimono.hikikomi_max_y; i++) {
+			clearDot(ctx, x, i, indexData, scale);
+      option.orimono.hikikomi_data[x - option.orimono.hikikomi_min_x][i] = 0;
+    }
+    drawDot(ctx, x, y, indexData, paletteIndex, scale);
+    option.orimono.hikikomi_data[x - option.orimono.hikikomi_min_x][
+      y - option.orimono.hikikomi_min_y
+    ] = paletteIndex;
+  } else {
+		// 上記以外の場所がクリックされてもドットは描画しない
+	}
 }
 
-function clearDot(ctx, x, y, indexData, paletteIndex, scale) {
-	let s = scale;
-	ctx.clearRect(x * s, y * s, s, s);
-	if(indexData) indexData.data[y * indexData.width + x] = paletteIndex;
+function clearDotOrimono(
+  ctx,
+  x,
+  y,
+  indexData,
+  option,
+  padding = 1
+) {
+  let s = option.scale,
+		b = s - padding;
+  if (
+    option.orimono.soshiki_min_x <= x &&
+    x < option.orimono.soshiki_max_x &&
+    option.orimono.soshiki_min_y <= y &&
+    y < option.orimono.soshiki_max_y
+  ) {
+		option.orimono.soshiki_data[x - option.orimono.soshiki_min_x][
+      y - option.orimono.soshiki_min_y
+    ] = 0;
+    let dot_at_kihon_x = 0,
+      dot_at_kihon_y = 0;
+    for (let i = 0; i < option.orimono.kihon_data.length; i++) {
+      if (
+        option.orimono.kihon_data[i].kihon_min_x <= x &&
+        x <= option.orimono.kihon_data[i].kihon_max_x &&
+        option.orimono.kihon_data[i].kihon_min_y <= y &&
+        y <= option.orimono.kihon_data[i].kihon_max_y
+      ) {
+        dot_at_kihon_x = x - option.orimono.kihon_data[i].kihon_min_x;
+        dot_at_kihon_y = y - option.orimono.kihon_data[i].kihon_min_y;
+        break;
+      }
+    }
+    for (let i = 0; i < option.orimono.kihon_data.length; i++) {
+      let x_at_all = option.orimono.kihon_data[i].kihon_min_x + dot_at_kihon_x;
+      let y_at_all = option.orimono.kihon_data[i].kihon_min_y + dot_at_kihon_y;
+			clearDot(ctx, x_at_all, y_at_all, indexData, option.scale);
+			let x_at_soshiki = x_at_all - option.orimono.soshiki_min_x;
+			let y_at_soshiki = y_at_all - option.orimono.soshiki_min_y;
+			option.orimono.soshiki_data[x_at_soshiki][y_at_soshiki] = 0;
+    }
+  } else if (
+    option.orimono.monsen_min_x <= x &&
+    x < option.orimono.monsen_max_x &&
+    option.orimono.monsen_min_y <= y &&
+    y < option.orimono.monsen_max_y
+  ) {
+    clearDot(ctx, x, y, indexData, option.scale);
+    option.orimono.monsen_data[x - option.orimono.monsen_min_x][
+      y - option.orimono.monsen_min_y
+    ] = 0;
+  } else if (
+    option.orimono.hikikomi_min_x <= x &&
+    x < option.orimono.hikikomi_max_x &&
+    option.orimono.hikikomi_min_y <= y &&
+    y < option.orimono.hikikomi_max_y
+  ) {
+    clearDot(ctx, x, y, indexData, option.scale);
+    option.orimono.hikikomi_data[x - option.orimono.hikikomi_min_x][
+      y - option.orimono.hikikomi_min_y
+    ] = 0;
+  }
+}
+
+// ドットの表示
+function drawDot(ctx, x, y, indexData, paletteIndex, scale, padding = 1) {
+  let s = scale,
+    b = s - padding;
+  ctx.fillRect(x * s + padding, y * s - padding, b, b);
+  if (indexData) indexData.data[y * indexData.width + x] = paletteIndex;
+}
+
+function clearDot(ctx, x, y, indexData, scale, padding = 1) {
+  let s = scale,
+    b = s - padding;
+  ctx.clearRect(x * s + padding, y * s - padding, b, b);
+  if (indexData) indexData.data[y * indexData.width + x] = 0;
 }
 
 // 直線の描画
@@ -630,33 +767,161 @@ function fillEllipse(ctx, x0, y0, x1, y1, indexData, paletteIndex, scale) {
 }
 
 // グリッドを表示する
-function drawGrid(ctx, option, scale) {
-	let size = scale,
-		l = option.grid.size,
-		n = option.imageWidth,
-		w = ctx.canvas.width,
-		h = ctx.canvas.height;
-	ctx.strokeStyle = option.grid.color1;
-	ctx.lineWidth = 1.0;
-	ctx.beginPath();
-	for(let i = 1; i < n; i++) {
-		let x = size * i - 0.5;
-		ctx.moveTo(0.5, x);
-		ctx.lineTo(w + 0.5, x);
-		ctx.moveTo(x, 0);
-		ctx.lineTo(x, h + 0.5);
-	}
-	ctx.stroke();
-	ctx.strokeStyle = option.grid.color0;
-	ctx.beginPath();
-	for(let i = l; i < n; i += l) {
-		let x = size * i - 0.5;
-		ctx.moveTo(0.5, x);
-		ctx.lineTo(w + 0.5, x);
-		ctx.moveTo(x, 0.5);
-		ctx.lineTo(x, h + 0.5);
-	}
-	ctx.stroke();
+function drawGrid(ctx, option, indexData) {
+  let size = option.scale;
+  ctx.strokeStyle = option.grid.color1;
+  ctx.lineWidth = 1.0;
+  ctx.beginPath();
+
+  // 関連図縦線（関連図というのは造語。左下の紋栓図と引込図を関連付けるもの）
+  let kanren_x_start = 0;
+  let kanren_y_start = 0;
+  let kanren_tate_length =
+    option.orimono.waku_maisu * option.scales[option.zoom];
+  let kanren_yoko_length =
+    option.orimono.waku_maisu * option.scales[option.zoom];
+  for (let i = 0; i <= option.orimono.waku_maisu; i++) {
+    let x = kanren_x_start + (size * i - (i == 0 ? -0.5 : 0.5)); // 関連図縦1本目はcanvasの縁になるので0.5にすると見えなくなる
+    ctx.moveTo(x, kanren_y_start);
+    ctx.lineTo(x, kanren_tate_length);
+  }
+  // 関連図横線
+  for (let i = 0; i <= option.orimono.soshiki_tate; i++) {
+    let y = kanren_y_start + (size * i - (i == 0 ? -0.5 : 0.5)); // 関連図横1本目はcanvasの縁になるので0.5にすると見えなくなる
+    ctx.moveTo(kanren_y_start, y);
+    ctx.lineTo(kanren_yoko_length, y);
+  }
+
+  // 関連図ドット（関連図だけ左下から右上に紋栓図と引込図を関連を表すドットが必要）
+  ctx.fillStyle = 'rgb(0, 0, 0)';
+  for (let i = 0; i < option.orimono.waku_maisu; i++) {
+    drawDot(ctx, i, i, indexData, 0, option.scale, 0);
+  }
+  // 紋栓図縦線
+  let monsen_x_start = 0;
+  let monsen_y_start = size * (option.orimono.waku_maisu + 1);
+  let monsen_tate_length =
+    option.orimono.soshiki_yoko * option.scales[option.zoom];
+  let monsen_yoko_length =
+    option.orimono.waku_maisu * option.scales[option.zoom];
+  for (let i = 0; i <= option.orimono.waku_maisu; i++) {
+    let x = monsen_x_start + (size * i - (i == 0 ? -0.5 : 0.5)); // 紋栓図縦1本目はcanvasの縁になるので0.5にすると見えなくなる
+    ctx.moveTo(x, monsen_y_start);
+    ctx.lineTo(x, monsen_y_start + monsen_tate_length);
+  }
+
+  // 紋栓図横線
+  for (let i = 0; i <= option.orimono.soshiki_yoko; i++) {
+    let y = monsen_y_start + (size * i - 0.5);
+    ctx.moveTo(monsen_x_start, y);
+    ctx.lineTo(monsen_yoko_length, y);
+  }
+
+  // 組織図縦線
+  let soshiki_x_start = size * (option.orimono.waku_maisu + 1);
+  let soshiki_y_start = size * (option.orimono.waku_maisu + 1);
+  let soshiki_tate_length =
+    option.orimono.soshiki_yoko * option.scales[option.zoom];
+  let soshiki_yoko_length =
+    option.orimono.soshiki_tate * option.scales[option.zoom];
+  for (let i = 0; i <= option.orimono.soshiki_tate; i++) {
+    let x = soshiki_x_start + (size * i - 0.5);
+    ctx.moveTo(x, soshiki_y_start);
+    ctx.lineTo(x, soshiki_y_start + soshiki_tate_length);
+  }
+  // 組織図横線
+  for (let i = 0; i <= option.orimono.soshiki_yoko; i++) {
+    let y = soshiki_y_start + (size * i - 0.5);
+    ctx.moveTo(soshiki_x_start, y);
+    ctx.lineTo(soshiki_x_start + soshiki_yoko_length, y);
+  }
+
+  // 引込図縦線
+  let hikikomi_x_start = size * (option.orimono.waku_maisu + 1);
+  let hikikomi_y_start = 0;
+  let hikikomi_tate_length =
+    option.orimono.waku_maisu * option.scales[option.zoom];
+  let hikikomi_yoko_length =
+    option.orimono.soshiki_tate * option.scales[option.zoom];
+  for (let i = 0; i <= option.orimono.soshiki_tate; i++) {
+    let x = hikikomi_x_start + (size * i - 0.5);
+    ctx.moveTo(x, hikikomi_y_start);
+    ctx.lineTo(x, hikikomi_y_start + hikikomi_tate_length);
+  }
+  // 引込図横線
+  for (let i = 0; i <= option.orimono.waku_maisu; i++) {
+    let y = hikikomi_y_start + (size * i - (i == 0 ? -0.5 : 0.5)); // 引込図横1本目はcanvasの縁になるので0.5にすると見えなくなる
+    ctx.moveTo(hikikomi_x_start, y);
+    ctx.lineTo(hikikomi_x_start + hikikomi_yoko_length, y);
+  }
+
+  ctx.stroke();
+
+  // ここから基本サイズに沿った枠線を記載
+  ctx.strokeStyle = option.grid.color0;
+  ctx.beginPath();
+
+  // 紋栓図縦線太線
+  for (let i = 0; i <= option.orimono.waku_maisu; i++) {
+    if (i % option.orimono.waku_maisu == 0) {
+      let x = monsen_x_start + (size * i - (i == 0 ? -0.5 : 0.5)); // 紋栓図縦1本目はcanvasの縁になるので0.5にすると見えなくなる
+      ctx.moveTo(x, monsen_y_start);
+      ctx.lineTo(x, monsen_y_start + monsen_tate_length);
+    }
+  }
+  // 紋栓図横線太線
+  for (let i = 0; i <= option.orimono.soshiki_yoko; i++) {
+    if (i % option.orimono.kihon_yoko == 0) {
+      let y = monsen_y_start + (size * i - 0.5);
+      ctx.moveTo(monsen_x_start, y);
+      ctx.lineTo(monsen_yoko_length, y);
+    }
+  }
+
+  // 組織図縦線太線
+  for (let i = 0; i <= option.orimono.soshiki_tate; i++) {
+    if (i % option.orimono.kihon_tate == 0) {
+      let x = soshiki_x_start + (size * i - 0.5);
+      ctx.moveTo(x, soshiki_y_start);
+      ctx.lineTo(x, soshiki_y_start + soshiki_tate_length);
+    }
+  }
+  // 組織図横線太線
+  for (let i = 0; i <= option.orimono.soshiki_yoko; i++) {
+    if (i % option.orimono.kihon_yoko == 0) {
+      let y = soshiki_y_start + (size * i - 0.5);
+      ctx.moveTo(soshiki_x_start, y);
+      ctx.lineTo(soshiki_x_start + soshiki_yoko_length, y);
+    }
+  }
+
+  // 引込図縦線太線
+  for (let i = 0; i <= option.orimono.soshiki_tate; i++) {
+    if (i % option.orimono.kihon_tate == 0) {
+      let x = hikikomi_x_start + (size * i - 0.5);
+      ctx.moveTo(x, hikikomi_y_start);
+      ctx.lineTo(x, hikikomi_y_start + hikikomi_tate_length);
+    }
+  }
+  // 引込図横線
+  for (let i = 0; i <= option.orimono.waku_maisu; i++) {
+    if (i % option.orimono.waku_maisu == 0) {
+      let y = hikikomi_y_start + (size * i - (i == 0 ? -0.5 : 0.5)); // 引込図横1本目はcanvasの縁になるので0.5にすると見えなくなる
+      ctx.moveTo(hikikomi_x_start, y);
+      ctx.lineTo(hikikomi_x_start + hikikomi_yoko_length, y);
+    }
+  }
+  ctx.stroke();
+  // ctx.strokeStyle = option.grid.color0;
+  // ctx.beginPath();
+  // for(let i = l; i < n; i += l) {
+  // 	let x = size * i - 0.5;
+  // 	ctx.moveTo(0.5, x);
+  // 	ctx.lineTo(w + 0.5, x);
+  // 	ctx.moveTo(x, 0.5);
+  // 	ctx.lineTo(x, h + 0.5);
+  // }
+  // ctx.stroke();
 }
 
 /////////////////////////////////////////////////////
@@ -664,13 +929,13 @@ function drawGrid(ctx, option, scale) {
 /////////////////////////////////////////////////////
 
 // インデックスカラーイメージを描画する
-function drawIndexedImage(ctx, image, palette, scale, paletteData, transparent) {
+function drawIndexedImage(ctx, image, palette, option, paletteData, transparent) {
 	let data = image.data,
-		size = scale,
-		w = image.width,
-		h = image.height,
-		l = w * h,
-		total = 0;
+    size = option.scale,
+    w = image.width,
+    h = image.height,
+    l = w * h,
+    total = 0;
 	/*
 	for(let k = 0, n = palette.length; k < n; k++) {
 		let count = 0,
@@ -722,37 +987,46 @@ function drawIndexedImage(ctx, image, palette, scale, paletteData, transparent) 
 //			}
 //		}
 //	}
-	
-	let dw = w * size,
-		dh = h * size,
-		dst = ctx.createImageData(dw, dh),
-		dstData = dst.data,
-		u32image = new Uint32Array(dst.data.buffer),
-		u32palette = new Uint32Array(paletteData.data.buffer),
-		k = 0,
-		p = paletteData.data;
-	for(let i = 0; i < dh; i++) {
-		let y = (i / size ^ 0) * w;
-		for(let j = 0; j < dw; j++) {
-//			let x = j / size ^ 0,
-//				index = data[y + x] * 4;
-//			if(index !== transparent) {
-//				dstData[k] = p[index];
-//				dstData[k + 1] = p[index + 1];
-//				dstData[k + 2] = p[index + 2];
-//				dstData[k + 3] = 255;
-//			}
-//			k += 4;
-			
-			let x = j / size ^ 0,
-				index = data[y + x];
-			if(index !== transparent) {
-				u32image[k] = u32palette[index];
-			}
-			k++;
+
+	// TODOこのやり方が簡単な気もするが性能の問題なのか？
+	let x = 0, y = 0;
+	for (let i = 0; i < data.length; i++) {
+		if (data[i] != 0) {
+					x = (i % w);
+          y = Math.floor(i / w);
+    drawDot(ctx, x, y, image, data[i], option.scale);
 		}
 	}
-	ctx.putImageData(dst, 0, 0);
+// 	let dw = w * size,
+// 		dh = h * size,
+// 		dst = ctx.createImageData(dw, dh),
+// 		dstData = dst.data,
+// 		u32image = new Uint32Array(dst.data.buffer),
+// 		u32palette = new Uint32Array(paletteData.data.buffer),
+// 		k = 0,
+// 		p = paletteData.data;
+// 	for(let i = 0; i < dh; i++) {
+// 		let y = (i / size ^ 0) * w;
+// 		for(let j = 0; j < dw; j++) {
+// //			let x = j / size ^ 0,
+// //				index = data[y + x] * 4;
+// //			if(index !== transparent) {
+// //				dstData[k] = p[index];
+// //				dstData[k + 1] = p[index + 1];
+// //				dstData[k + 2] = p[index + 2];
+// //				dstData[k + 3] = 255;
+// //			}
+// //			k += 4;
+			
+// 			let x = j / size ^ 0,
+// 				index = data[y + x];
+// 			if(index !== transparent) {
+// 				u32image[k] = u32palette[index];
+// 			}
+// 			k++;
+// 		}
+// 	}
+// 	ctx.putImageData(dst, 0, 0);
 }
 
 // 範囲指定してインデックスカラーイメージを描画する

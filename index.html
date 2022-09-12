@@ -12,7 +12,8 @@
 	<link href="./editor_files/widget.css" media="screen" rel="stylesheet" type="text/css">
 	<link href="./editor_files/dot_palette.css" media="screen" rel="stylesheet" type="text/css">
 	<link href="./editor_files/selection.css" media="screen" rel="stylesheet" type="text/css">
-	<link rel="shortcut icon" href="https://dot-a.herokuapp.com/images/favicon.png">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.css">
+	<link href="https://unpkg.com/@tailwindcss/forms/dist/forms.min.css" rel="stylesheet">
 	<script src="./editor_files/base64.js" type="text/javascript"></script>
 	<script src="./editor_files/selector.js" type="text/javascript"></script>
 	<script src="./editor_files/keymapper.js" type="text/javascript"></script>
@@ -28,13 +29,20 @@
 	<script src="./editor_files/storage.js" type="text/javascript"></script>
 	<script src="./editor_files/layer.js" type="application/javascript"></script>
 	<script src="https://cdn.tailwindcss.com"></script>
-	<link href="https://unpkg.com/@tailwindcss/forms/dist/forms.min.css" rel="stylesheet">
-	<script src="chrome-extension://mooikfkahbdckldjjndioackbalphokd/assets/prompt.js"></script>
+	<script src="https://code.jquery.com/jquery-3.6.1.min.js"
+		integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+	<link rel="stylesheet"
+		href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" />
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+	<!-- <script src="chrome-extension://mooikfkahbdckldjjndioackbalphokd/assets/prompt.js"></script> -->
 </head>
 
 <body>
 
 	<div id="container">
+		<div id="header">
+			<h1>織方図</h1>
+		</div>
 		<div class="content" style="clear: both;">
 
 			<div id="editor">
@@ -43,110 +51,136 @@
 					<ul>
 						<li id="zoomin">
 							<p>拡大(<span>Z</span>)</p>
+							<span class="material-symbols-outlined">
+								zoom_in
+							</span>
 						</li>
 						<li id="zoomout">
 							<p>縮小(<span>X</span>)</p>
+							<span class="material-symbols-outlined">
+								zoom_out
+							</span>
 						</li>
 						<li id="undo">
 							<p>もとに戻す(Ctrl+Z)</p>
+							<span class="material-symbols-outlined">
+								undo
+							</span>
 						</li>
 						<li id="redo">
 							<p>やり直し(Ctrl+Y)</p>
+							<span class="material-symbols-outlined">
+								redo
+							</span>
 						</li>
 						<li id="grid">
 							<p>グリッド(<span>#</span>)</p>
+							<span class="material-symbols-outlined">
+								grid_on
+							</span>
 						</li>
 						<li id="dropper">
 							<p>スポイト</p>
+							<span class="material-symbols-outlined">
+								colorize
+							</span>
 						</li>
 						<!-- <li id="zoomRate" class="tools-info">x 1</li> -->
 						<li id="pen" class="selected">
 							<p>ペン(<span>P</span>)</p>
+							<span class="material-symbols-outlined">
+								edit
+							</span>
 						</li>
-						<li id="line">
+						<!-- <li id="line">
 							<p>直線(<span>L</span>)</p>
-						</li>
-						<li id="rect">
+						</li> -->
+						<!-- <li id="rect">
 							<p>長方形</p>
 						</li>
 						<li id="frect">
 							<p>塗りつぶし長方形</p>
-						</li>
+						</li> -->
 						<li id="paint">
 							<p>塗りつぶし(<span>F</span>)</p>
+							<span class="material-symbols-outlined">
+								format_color_fill
+							</span>
 						</li>
-						<li id="ellipse">
+						<!-- <li id="ellipse">
 							<p>円</p>
 						</li>
 						<li id="fellipse">
 							<p>塗りつぶし円</p>
+						</li> -->
+						<li id="monnsenhikikomi">
+							<p>紋栓・引込</p>
+							<span class="material-symbols-outlined">
+								gradient
+							</span>
+						</li>
+						<li id="monsen">
+							<p>紋栓</p>
+							<span class="material-symbols-outlined">
+								gradient
+							</span>
+						</li>
+						<li id="hikikomi">
+							<p>引込</p>
+							<span class="material-symbols-outlined">
+								gradient
+							</span>
+						</li>
+						<li id="soshiki">
+							<p>組織</p>
+							<span class="material-symbols-outlined">
+								gradient
+							</span>
 						</li>
 						<li id="select">
 							<p>範囲選択</p>
+							<span class="material-symbols-outlined">
+								select_all
+							</span>
 						</li>
 						<li id="copy">
 							<p>コピー</p>
+							<span class="material-symbols-outlined">
+								content_copy
+							</span>
 						</li>
-
 						<li id="fliph">
 							<p>左右反転</p>
+							<span class="material-symbols-outlined">
+								swap_horiz
+							</span>
 						</li>
 						<li id="flipv">
 							<p>上下反転</p>
+							<span class="material-symbols-outlined">
+								swap_vert
+							</span>
 						</li>
 						<li id="rotater">
 							<p>回転</p>
-						</li>
-
-						<li id="twitter"><a href="https://dot-a.herokuapp.com/auth/twitter" target="_blank"></a>
-							<p>Twitterに投稿</p>
+							<span class="material-symbols-outlined">
+								rotate_right
+							</span>
 						</li>
 						<li id="save">
 							<p>保存</p>
+							<span class="material-symbols-outlined">
+								download
+							</span>
 						</li>
 						<li id="load">
 							<p>読み込み</p>
-						</li>
-
-						<li id="tools">
-							<p>ツール</p>
-						</li>
-					</ul>
-				</div>
-
-				<div class="editor-tools" id="tools-2" style="display: none;">
-					<ul>
-						<li id="outline">
-							<p>アウトライン</p>
-						</li>
-						<li id="shiftl">
-							<p>左シフト</p>
-						</li>
-						<li id="shiftr">
-							<p>右シフト</p>
-						</li>
-						<li id="shiftu">
-							<p>上シフト</p>
-						</li>
-						<li id="shiftd">
-							<p>下シフト</p>
-						</li>
-						<!--					<li id="transparent"><p>抜き色</p></li>-->
-						<li id="open-image"><label for="open-button"></label><input type="file" id="open-button">
-							<p>画像を開く</p>
-						</li>
-						<li id="layer">
-							<p>レイヤー</p>
-						</li>
-						<li id="scroll">
-							<p>スクロール</p>
-						</li>
-						<li id="tone">
-							<p>トーン</p>
+							<span class="material-symbols-outlined">
+								upload
+							</span>
 						</li>
 					</ul>
 				</div>
-
 				<div id="editor-canvas">
 					<!--<p>Canvas 32x32(100%)</p>-->
 					<canvas id="background" width="192" height="192"></canvas>
@@ -546,15 +580,15 @@
 						<div class="text-left">
 							<div>基本サイズ</div>
 							<div class="flex gap-2">
-								<div>
-									<label for="basic_warp" class="block mb-2 text-sm font-medium text-gray-900">たて糸本数</label>
-									<input type="number" id="basic_warp" min="0" max="50"
+								<div class="w-1/2">
+									<label for="kihon_tate" class="block mb-2 text-sm font-medium text-gray-900">たて糸本数</label>
+									<input type="number" id="kihon_tate" min="0" max="400" value="4"
 										class="w-full h-10 px-3 mb-2 text-base text-gray-700 placeholder-gray-600 border rounded-lg focus:shadow-outline"
 										placeholder="〜400" required>
 								</div>
-								<div>
-									<label for="basic_weft" class="block mb-2 text-sm font-medium text-gray-900">よこ糸本数</label>
-									<input type="number" id="basic_weft" min="0" max="50"
+								<div class="w-1/2">
+									<label for="kihon_yoko" class="block mb-2 text-sm font-medium text-gray-900">よこ糸本数</label>
+									<input type="number" id="kihon_yoko" min="0" max="400" value="4"
 										class="w-full h-10 px-3 mb-2 text-base text-gray-700 placeholder-gray-600 border rounded-lg focus:shadow-outline"
 										placeholder="〜400" required>
 								</div>
@@ -563,15 +597,15 @@
 						<div class="text-left">
 							<div>組織サイズ</div>
 							<div class="flex gap-2">
-								<div>
-									<label for="group_warp" class="block mb-2 text-sm font-medium text-gray-900">たて糸本数</label>
-									<input type="number" id="group_warp" min="0" max="50"
+								<div class="w-1/2">
+									<label for="soshiki_tate" class="block mb-2 text-sm font-medium text-gray-900">たて糸本数</label>
+									<input type="number" id="soshiki_tate" min="0" max="400" value="8" maxlength="4"
 										class="w-full h-10 px-3 mb-2 text-base text-gray-700 placeholder-gray-600 border rounded-lg focus:shadow-outline"
 										placeholder="〜400" required>
 								</div>
-								<div>
-									<label for="group_weft" class="block mb-2 text-sm font-medium text-gray-900">よこ糸本数</label>
-									<input type="number" id="group_weft" min="0" max="50"
+								<div class="w-1/2">
+									<label for="soshiki_yoko" class="block mb-2 text-sm font-medium text-gray-900">よこ糸本数</label>
+									<input type="number" id="soshiki_yoko" min="0" max="400" value="12"
 										class="w-full h-10 px-3 mb-2 text-base text-gray-700 placeholder-gray-600 border rounded-lg focus:shadow-outline"
 										placeholder="〜400" required>
 								</div>
@@ -579,9 +613,9 @@
 						</div>
 						<div class="text-left">
 							<div>枠枚数</div>
-							<label for="waku_count" class="block mb-2 text-sm font-medium text-gray-900">枠枚数</label>
-							<input type="number" id="waku_count" min="0" max="50"
-								class="w-1/2 h-10 px-3 mb-2 text-base text-gray-700 placeholder-gray-600 border rounded-lg focus:shadow-outline"
+							<label for="waku_maisu" class="block mb-2 text-sm font-medium text-gray-900">枠枚数</label>
+							<input type="number" id="waku_maisu" min="0" max="50" value="2"
+								class="w-full h-10 px-3 mb-2 text-base text-gray-700 placeholder-gray-600 border rounded-lg focus:shadow-outline"
 								placeholder="〜50" required>
 						</div>
 						<div class="text-left">
@@ -600,11 +634,6 @@
 			</div>
 		</div>
 
-		<div id="footer">
-			<p>動作環境: Windows10, Google Chrome, Firefox, Opera で動作確認</p>
-			<p class="copyright">Copyright 2013 <a href="https://twitter.com/sapphire_al2o3"
-					target="_blank">@sapphire_al2o3</a></p>
-		</div>
 		<div id="overlay" style="display: block;"></div>
 	</div><!-- container -->
 	<script src="./editor_files/editor.js" type="text/javascript"></script>

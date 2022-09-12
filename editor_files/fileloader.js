@@ -53,7 +53,6 @@
 				if(checkChunk(buffer, c + 4, 'tRNS')) {
 					// 透明度
 					size = buffer[c] << 24 | buffer[c + 1] << 16 | buffer[c + 2] << 8 | buffer[c + 3];
-					console.log('tRNS', size);
 					
 					c += 8;
 					
@@ -117,7 +116,6 @@
 					if(that.onload) that.onload(indexData, paletteData);
 				};
 				image.src = result[0] + ',' + Base64.encode(buffer);
-				console.log('image loaded');
 			};
 			reader.readAsDataURL(file);
 		},

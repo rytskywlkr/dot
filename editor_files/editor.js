@@ -181,16 +181,28 @@ editor: Editor
 		fit: true
 	};
 	const option = {};
-	option.scales = [1, 2, 4, 6, 8, 12];
-	option.zoom = 3;
+	option.scales = [1, 2, 4, 6, 8, 12, 16, 20, 24];
+	option.zoom = 7;
 	option.scale = option.scales[option.zoom];
-	option.gridOn = false;
+	option.gridOn = true;
 	option.grid = {
 		color0: '#808080',
 		color1: '#C0C0C0',
-		size: 16,
+		size: 4,// 太線を引くグリッド数
 		enable: false
 	};
+
+	option.orimono = {
+    kihon_tate: 0,
+    kihon_yoko: 0,
+    soshiki_tate: 0,
+    soshiki_yoko: 0,
+    waku_maisu: 0,
+    kihon_data: [],
+    soshiki_data: [],
+    monsen_data: [],
+    hikikomi_data: [],
+  };
 	
 	let undoData = [],
 		redoData = [];
@@ -225,22 +237,26 @@ editor: Editor
 
 	// キャンバスをリサイズする
 	function resize() {
-		canvas.width = indexData.width * option.scale;
-		canvas.height = indexData.height * option.scale;
-		option.canvasWidth = canvas.width;
-		option.canvasHeight = canvas.height;
-		work.canvas.width = canvas.width;
-		work.canvas.height = canvas.height;
-		backgroundCtx.canvas.width = canvas.width;
-		backgroundCtx.canvas.height = canvas.height;
-		if(selection.enable) {
-		}
-		for(let i = 0; i < Layer.count(); i++) {
-			let layer = Layer.get(i).canvas;
-			layer.width = canvas.width;
-			layer.height = canvas.height;
-		}
-	}
+    canvas.width = indexData.width * option.scale;
+    canvas.height = indexData.height * option.scale;
+    option.canvasWidth = canvas.width;
+    option.canvasHeight = canvas.height;
+    work.canvas.width = canvas.width;
+    work.canvas.height = canvas.height;
+    backgroundCtx.canvas.width = canvas.width;
+    backgroundCtx.canvas.height = canvas.height;
+    if (selection.enable) {
+    }
+    for (let i = 0; i < Layer.count(); i++) {
+      let layer = Layer.get(i).canvas;
+      layer.width = canvas.width;
+      layer.height = canvas.height;
+    }
+    ctx.translate(0, canvas.height); // 原点を左下に移動
+    ctx.scale(1, -1); // 上記に伴いY軸の図り方を反転
+    work.translate(0, canvas.height); // 原点を左下に移動
+    work.scale(1, -1); // 上記に伴いY軸の図り方を反転
+  }
 	
 	function zoom() {
 		option.scale = option.scales[option.zoom];
@@ -249,7 +265,7 @@ editor: Editor
 		for(let i = 0; i < Layer.count(); i++) {
 			let layer = Layer.get(i),
 				trans = Palette.getTransparentIndex();
-			drawIndexedImage(layer.ctx, layer.indexData, palette, option.scale, paletteData, trans);
+			drawIndexedImage(layer.ctx, layer.indexData, palette, option, paletteData, trans);
 		}
 //		$('#zoomRate').text('x ' + option.scale);
 	}
@@ -289,8 +305,8 @@ editor: Editor
 	
 	// グリッドの表示
 	function grid() {
-		if(option.gridOn && option.zoom > 2) {
-			drawGrid(work, option, option.scale);
+		if (option.gridOn && option.zoom > 2) {
+			drawGrid(work, option, indexData);
 		}
 	}
 	
@@ -427,12 +443,16 @@ editor: Editor
 	
 
 	function createImage(w, h) {
-		option.imageWidth = w;
-		option.imageHeight = h;
-		
-		indexData = createIndexData(w, h);
-		return indexData;
-	}
+    option.imageWidth =
+      option.orimono.soshiki_tate + option.orimono.waku_maisu + 1;
+		option.imageHeight =
+			option.orimono.soshiki_yoko + option.orimono.waku_maisu + 1;
+		indexData = createIndexData(
+      option.imageWidth,
+      option.imageHeight
+    );
+    return indexData;
+  }
 
 	function initEditor() {
 		canvas = document.getElementById('canvas');
@@ -458,7 +478,6 @@ editor: Editor
 	} else {
 		mode = param[0];
 		docId = param[1];
-		console.log(mode, docId);
 	}
 		
 	initEditor();
@@ -495,8 +514,7 @@ editor: Editor
 		new Widget('color-picker');
 		new Widget('view');
 		new Widget('layers');
-		console.log($('view').lastChild);
-		preview = $('view').lastChild.getContext('2d');
+		preview = $('view').lastElementChild.getContext('2d');
 	}
 
 	let usedPalette = {};
@@ -524,7 +542,7 @@ editor: Editor
 		Palette.setFrontColor(0);
 		palette = Palette.getPaletteData();
 		resize();
-		drawIndexedImage(ctx, indexData, palette, option.scale, paletteData);
+		drawIndexedImage(ctx, indexData, palette, option, paletteData);
 		grid();
 		drawPreview();
 		backgroundCtx.canvas.style.backgroundColor = palette[Palette.getTransparentIndex()];
@@ -608,24 +626,321 @@ editor: Editor
 		$('transparent').classList.toggle('selected');
 	});
 
+	$.bind($('monnsenhikikomi'), 'click', () => {
+    // 空の紋栓データを生成する
+    let new_monsen_data = [];
+    for (let i = 0; i < option.orimono.waku_maisu; i++) {
+      new_monsen_data[i] = new Uint8Array(option.orimono.soshiki_yoko);
+    }
+
+    // 空の引込データを生成する
+    let new_hikikomi_data = [];
+    for (let i = 0; i < option.orimono.soshiki_tate; i++) {
+      new_hikikomi_data[i] = new Uint8Array(option.orimono.waku_maisu);
+		}
+
+    for (let i = 0; i < option.orimono.soshiki_tate; i++) {
+      let monsen_row; // 紋栓図の列番号（左から何列目か）
+      for (let j = 0; j < new_monsen_data.length; j++) {
+				if (new_monsen_data[j].every(e => e === 0) ||
+					JSON.stringify(new_monsen_data[j]) ==
+          JSON.stringify(option.orimono.soshiki_data[i])) {
+          console.log('i:' + i + ' j:' + j);
+          monsen_row = j;
+					new_monsen_data[monsen_row] = option.orimono.soshiki_data[i];
+					new_hikikomi_data[i][monsen_row] = 1;
+					break;
+        }
+      }
+
+			// 紋栓図は先に全てクリアする
+			
+      if (
+        monsen_row !== undefined
+      ) {
+				for (let k = 0; k < option.orimono.soshiki_yoko; k++) {
+          let x = monsen_row;
+          let y = k + option.orimono.monsen_min_y;
+          if (option.orimono.soshiki_data[i][k] == 0) {
+            clearDotOrimono(ctx, x, y, indexData, option);
+            console.log('clear monsen x:' + x + ' y:' + y);
+          } else {
+            console.log('draw monsen x:' + x + ' y:' + y);
+            drawDotOrimono(
+              ctx,
+              x,
+              y,
+              indexData,
+              1, // 紋栓図は必ず1
+              option.scale,
+              option
+            );
+          }
+				}
+				for (let k = 0; k < option.orimono.waku_maisu; k++) {
+          let x = i + option.orimono.hikikomi_min_x;
+          let y = k + option.orimono.hikikomi_min_y;
+          if (monsen_row !== undefined && k == monsen_row) {
+            drawDotOrimono(
+              ctx,
+              x,
+              y,
+              indexData,
+              1, // 引込図は必ず1
+              option.scale,
+              option
+            );
+          } else {
+            clearDotOrimono(ctx, x, y, indexData, option);
+          }
+        }
+				
+      } else {
+        // 対象の組織図の列の引込図に紋栓図の列番号が指定されており、
+        // 紋栓図と組織図の内容が異なる場合は、
+        toastr.error('綜絖枚数内で紋栓を計算できませんでした', '', {
+          timeOut: 2000,
+        });
+        break;
+      }
+    }
+    option.orimono.monsen_data = new_monsen_data.map((list) => ({ ...list })); // ディープコピー
+    option.orimono.hikikomi_data = new_hikikomi_data.map((list) => ({ ...list })); // ディープコピー
+  });
+	
+	$.bind($('monsen'), 'click', () => {
+    // 空の紋栓データを生成する
+    let new_monsen_data = [];
+    for (let i = 0; i < option.orimono.waku_maisu; i++) {
+      new_monsen_data[i] = new Uint8Array(option.orimono.soshiki_yoko);
+    }
+
+    for (let i = 0; i < option.orimono.soshiki_tate; i++) {
+      let monsen_row; // 紋栓図の列番号（左から何列目か）
+      for (let j = 0; j < option.orimono.hikikomi_data[i].length; j++) {
+        // 引込図の列の中でONになっているドットが紋栓図の列番号を表現している
+        if (option.orimono.hikikomi_data[i][j] != 0) {
+          // 引き込み図の列の中でONになるのは1つだけなので見つかった時点でbreak
+          console.log('i:' + i + ' j:' + j);
+          monsen_row = j;
+          break;
+        }
+      }
+
+      if (
+        monsen_row !== undefined &&
+        new_monsen_data[monsen_row].every(e => e === 0)
+      ) {
+        // 対象の組織図の列の引込図に紋栓図の列番号が指定されており、
+        // かつその紋栓図の列が未指定の場合、対象の組織図の列を紋栓図の列にコピーする
+        new_monsen_data[monsen_row] = option.orimono.soshiki_data[i];
+        for (let k = 0; k < option.orimono.soshiki_data[i].length; k++) {
+          let x = monsen_row;
+          let y = k + option.orimono.soshiki_min_y;
+          if (option.orimono.soshiki_data[i][k] == 0) {
+            clearDotOrimono(ctx, x, y, indexData, option);
+          } else {
+            drawDotOrimono(
+              ctx,
+              x,
+              y,
+              indexData,
+              1, // 紋栓図は必ず1
+              option.scale,
+              option
+            );
+          }
+        }
+      } else if (
+        monsen_row !== undefined &&
+        JSON.stringify(new_monsen_data[monsen_row]) !=
+          JSON.stringify(option.orimono.soshiki_data[i])
+      ) {
+        // 対象の組織図の列の引込図に紋栓図の列番号が指定されており、
+        // 紋栓図と組織図の内容が異なる場合は、
+        toastr.error('綜絖枚数内で紋栓を計算できませんでした', '', {
+          timeOut: 2000,
+        });
+        break;
+      }
+    }
+    option.orimono.monsen_data = new_monsen_data.map((list) => ({ ...list })); // ディープコピー
+  });
+	
+	$.bind($('hikikomi'), 'click', () => {
+    // 空の引込データを生成する
+		let new_hikikomi_data = [];
+		for (let i = 0; i < option.orimono.soshiki_tate; i++) {
+			new_hikikomi_data[i] = new Uint8Array(option.orimono.waku_maisu);
+		}
+		for (let i = 0; i < option.orimono.soshiki_tate; i++) {
+      let monsen_row; // 紋栓図の列番号（左から何列目か）
+			for (let j = 0; j < option.orimono.waku_maisu; j++) {
+				if (JSON.stringify(option.orimono.monsen_data[j]) ==
+          JSON.stringify(option.orimono.soshiki_data[i])
+				) {
+					monsen_row = j;
+					new_hikikomi_data[i][monsen_row] = 1;
+					break;
+				}
+			}
+      for (let k = 0; k < option.orimono.waku_maisu; k++) {
+				let x = i + option.orimono.hikikomi_min_x;
+				let y = k + option.orimono.hikikomi_min_y;
+				if (monsen_row !== undefined && k == monsen_row) {
+					drawDotOrimono(
+						ctx,
+						x,
+						y,
+						indexData,
+						1, // 引込図は必ず1
+						option.scale,
+						option
+					);
+				} else {
+					clearDotOrimono(ctx, x, y, indexData, option);
+				}
+			}
+      
+    }
+    option.orimono.hikikomi_data = new_hikikomi_data.map((list) => ({ ...list })); // ディープコピー
+  });
+	
+	$.bind($('soshiki'), 'click', () => {
+		paletteIndex = Palette.getFrontIndex();
+		for (let i = 0; i < option.orimono.soshiki_tate; i++) {
+			let monsen_count = option.orimono.hikikomi_data[i].findIndex((element) => {
+          return element == 1;
+			});
+			if (monsen_count == -1) continue;
+			let monsen_column = option.orimono.monsen_data[monsen_count];
+			for (let j = 0; j < option.orimono.soshiki_yoko; j++) {
+				option.orimono.soshiki_data[i][j] = monsen_column[j];
+				let x = option.orimono.soshiki_min_x + i;
+				let y = option.orimono.soshiki_min_y + j;
+				if (monsen_column[j] == 0) {
+					// console.log('clear:'+j);
+					clearDot(ctx, x, y, indexData, option.scale);
+					// 組織図の一番左下からみた座標
+					let x_at_soshiki = x - option.orimono.soshiki_min_x;
+      		let y_at_soshiki = y - option.orimono.soshiki_min_y;
+					option.orimono.soshiki_data[x_at_soshiki][y_at_soshiki] = 0;
+				} else {
+					// console.log('draw:' + j);
+					drawDot(ctx, x, y, indexData, paletteIndex, option.scale);
+					// 組織図の一番左下からみた座標
+					let x_at_soshiki = x - option.orimono.soshiki_min_x;
+					let y_at_soshiki = y - option.orimono.soshiki_min_y;
+					option.orimono.soshiki_data[x_at_soshiki][y_at_soshiki] = 1;
+				}
+      }
+		}
+  });
+
 	// サイズの指定
 	$.bind($('new-image-submit'), 'click', e => {
-		console.log();
-		$.hide($('new-image'));
-//			$('#overlay').fadeOut();
-		$.fadeOut($('overlay'));
-		KeyMapper.bind(document, 'trigger');
-		const index = parseInt($.q('#new-image input[name="size"]:checked').value, 10);
-		const group_warp = $.q('group_warp').value;
-		const group_weft = $.q('group_weft').value;
-		createImage(group_warp, group_weft);
-		selection.indexData = createIndexData(group_warp, group_weft);
-		resize();
-		ctx.fillStyle = palette[0];
-		ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-		drawPreview();
-		Layer.set(ctx, ctx.canvas, indexData);
-	});
+    $.hide($('new-image'));
+    //			$('#overlay').fadeOut();
+    $.fadeOut($('overlay'));
+    KeyMapper.bind(document, 'trigger');
+    option.orimono.kihon_tate = Number($('kihon_tate').value);
+    option.orimono.kihon_yoko = Number($('kihon_yoko').value);
+    option.orimono.soshiki_tate = Number($('soshiki_tate').value);
+    option.orimono.soshiki_yoko = Number($('soshiki_yoko').value);
+    option.orimono.waku_maisu = Number($('waku_maisu').value);
+    selection.indexData = createImage(
+      option.orimono.soshiki_tate,
+      option.orimono.soshiki_yoko
+    );
+
+    // 基本データを生成する
+    let i = 0;
+    let j = 0;
+    let k = 0;
+    let kihon_count = 0;
+    let kihon_tate_count = Math.ceil(
+      option.orimono.soshiki_yoko / option.orimono.kihon_yoko
+    ); //組織の縦に基本が何枚入るか計算
+    let kihon_yoko_count = Math.ceil(
+      option.orimono.soshiki_tate / option.orimono.kihon_tate
+    ); //組織の横に基本が何枚入るか計算
+    for (i = 0; i < kihon_tate_count; i++) {
+      for (j = 0; j < kihon_yoko_count; j++) {
+        for (k = 0; k < option.orimono.kihon_yoko; k++) {
+          option.orimono.kihon_data[kihon_count] = [];
+          option.orimono.kihon_data[kihon_count][k] = new Uint8Array(
+            option.orimono.kihon_tate
+          );
+        }
+        option.orimono.kihon_data[kihon_count].kihon_min_x =
+          option.orimono.waku_maisu + 1 + option.orimono.kihon_yoko * j;
+        option.orimono.kihon_data[kihon_count].kihon_min_y =
+          option.orimono.waku_maisu + 1 + option.orimono.kihon_tate * i;
+        option.orimono.kihon_data[kihon_count].kihon_max_x =
+          option.orimono.kihon_data[kihon_count].kihon_min_x +
+          option.orimono.kihon_yoko -
+          1;
+        option.orimono.kihon_data[kihon_count].kihon_max_y =
+          option.orimono.kihon_data[kihon_count].kihon_min_y +
+          option.orimono.kihon_tate -
+          1;
+        kihon_count++;
+      }
+    }
+
+    // 組織データを生成する
+		for (i = 0; i < option.orimono.soshiki_tate; i++) {
+      option.orimono.soshiki_data[i] = new Uint8Array(
+        option.orimono.soshiki_yoko
+      );
+    }
+    option.orimono.soshiki_min_x = option.orimono.waku_maisu + 1; // 空白の+1
+    option.orimono.soshiki_min_y = option.orimono.waku_maisu + 1; // 空白の+1
+    option.orimono.soshiki_max_x =
+      option.orimono.soshiki_min_x + option.orimono.soshiki_tate;
+    option.orimono.soshiki_max_y =
+      option.orimono.soshiki_min_y + option.orimono.soshiki_yoko;
+
+    // 紋栓データを生成する
+    for (i = 0; i < option.orimono.waku_maisu; i++) {
+      option.orimono.monsen_data[i] = new Uint8Array(
+        option.orimono.soshiki_yoko
+      );
+    }
+    option.orimono.monsen_min_x = 0;
+    option.orimono.monsen_min_y = option.orimono.waku_maisu + 1; // 空白の+1
+    option.orimono.monsen_max_x =
+      option.orimono.monsen_min_x + option.orimono.waku_maisu;
+    option.orimono.monsen_max_y =
+      option.orimono.monsen_min_y + option.orimono.soshiki_yoko;
+
+    // 引込データを生成する
+    for (i = 0; i < option.orimono.soshiki_tate; i++) {
+      option.orimono.hikikomi_data[i] = new Uint8Array(
+        option.orimono.waku_maisu
+      );
+    }
+    option.orimono.hikikomi_min_x = option.orimono.waku_maisu + 1; // 空白の+1
+    option.orimono.hikikomi_min_y = 0;
+    option.orimono.hikikomi_max_x =
+      option.orimono.hikikomi_min_x + option.orimono.soshiki_yoko;
+    option.orimono.hikikomi_max_y =
+      option.orimono.hikikomi_min_y + option.orimono.waku_maisu;
+
+    resize();
+    grid();
+    ctx.fillStyle = palette[0];
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    drawPreview();
+    Layer.set(ctx, ctx.canvas, indexData);
+
+		// 一番下にスクロール
+    // scrollHeight ページの高さ clientHeight ブラウザの高さ
+		let elm = document.documentElement;
+    let bottom = elm.scrollHeight - elm.clientHeight;
+    // 垂直方向へ移動
+    window.scroll(0, bottom);
+  });
 
 	if(mode === 'fork' || mode === 'edit') {
 		$.hide($('new-image'));
@@ -646,7 +961,7 @@ editor: Editor
 			resize();
 			ctx.fillStyle = palette[0];
 			ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-			drawIndexedImage(ctx, indexData, palette, option.scale, paletteData);
+			drawIndexedImage(ctx, indexData, palette, option, paletteData);
 			drawPreview();
 		});
 	} else {
@@ -660,8 +975,7 @@ editor: Editor
 		Palette.setPaletteData(palette, false);
 		Palette.convert(paletteData);
 		
-		createImage(32, 32);
-		selection.indexData = createIndexData(32, 32);
+		selection.indexData = createImage(32, 32, 2);
 		resize();
 		ctx.fillStyle = palette[0];
 		ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -679,7 +993,7 @@ editor: Editor
 				// 色の入れ替え
 				swapColor(layer.indexData, e[0], e[1]);
 			}
-			drawIndexedImage(layer.ctx, layer.indexData, palette, option.scale, paletteData, Palette.getTransparentIndex());
+			drawIndexedImage(layer.ctx, layer.indexData, palette, option, paletteData, Palette.getTransparentIndex());
 		}
 		drawPreview();
 		backgroundCtx.canvas.style.backgroundColor = palette[Palette.getTransparentIndex()];
@@ -695,18 +1009,21 @@ editor: Editor
 	});
 	
 	$.bind($('work'), 'contextmenu', e => {
-		if(down) {
-			// 左クリック中
-			down = false;
-			work.clearRect(0, 0, work.canvas.width, work.canvas.height);
-			grid();
-		} else {
-			let x = Math.floor((e.pageX - left) / option.scale),
-				y = Math.floor((e.pageY - top) / option.scale);
-			paletteIndex = indexData.data[(y * indexData.width + x)];
-			Palette.setFrontColor(paletteIndex);
-			ColorPicker.setColor(Color.strToRGB(Palette.getFrontColor()));
-		}
+		let r = work.canvas.getBoundingClientRect();
+		left = window.scrollX + r.left;
+		top = window.scrollY + r.top;
+		let x = e.pageX - left,
+			y = work.canvas.height - (e.pageY - top); // Y軸は下から数えたいため
+				points[0] = (y / option.scale) ^ 0;
+        points[1] = (x / option.scale) ^ 0;
+		paletteIndex = indexData.data[(y * indexData.width + x)];
+    clearDotOrimono(
+      ctx,
+      points[1],
+      points[0],
+      indexData,
+      option
+    );
 		e.preventDefault();
 		e.stopPropagation();
 		return false;
@@ -807,22 +1124,15 @@ editor: Editor
 	};
 	
 	$.bind($('work'), 'mousedown', e => {
-		console.log(indexData);
 		let r = work.canvas.getBoundingClientRect();
-		console.log(r);
+
 		left = window.scrollX + r.left;
 		top = window.scrollY + r.top;
-		console.log(left);
-		console.log(top);
 		let x = e.pageX - left,
-			y = e.pageY - top,
-			size = option.scale;
-		console.log(x);
-		console.log(y);
-		console.log(size);
+      y = work.canvas.height - (e.pageY - top), // Y軸は下から数えたいため
+      size = option.scale;
 		points[0] = y / size ^ 0;
 		points[1] = x / size ^ 0;
-		console.log(points);
 
 		if(e.altKey) {
 			// スポイト
@@ -861,15 +1171,10 @@ editor: Editor
 			switch(tool) {
 			case 'pen':
 					down = true;
-					console.log(points[1]);
-					console.log(points[0]);
-					console.log(indexData);
-					console.log(paletteIndex);
-					console.log(option.scale);
 //				if(paletteIndex === 0) {
 //					clearDot(ctx, points[1], points[0], indexData, paletteIndex, option.scale);
 //				} else {
-					drawDot(ctx, points[1], points[0], indexData, paletteIndex, option.scale);
+					drawDotOrimono(ctx, points[1], points[0], indexData, paletteIndex, option.scale, option);
 //				}
 				break;
 			case 'paint':
@@ -924,14 +1229,15 @@ editor: Editor
 			}
 			work.clearRect(0, 0, w, h);
 			switch(tool) {
-			case 'pen':
-				let px = points[1],
-					py = points[0];
-				context.data = indexData.data;
-				drawLine(ctx, px, py, x, y, indexData, paletteIndex, option.scale);
-				points[0] = y;
-				points[1] = x;
-				break;
+			// TODO 現行にないのでコメントアウト
+				// case 'pen':
+			// 	let px = points[1],
+			// 		py = points[0];
+			// 	context.data = indexData.data;
+			// 	drawLine(ctx, px, py, x, y, indexData, paletteIndex, option.scale);
+			// 	points[0] = y;
+			// 	points[1] = x;
+			// 	break;
 			case 'line':
 				drawLine(work, points[1], points[0], x, y, dummy, paletteIndex, option.scale);
 				break;
@@ -1380,7 +1686,7 @@ editor: Editor
 			pushRecord(redoData);
 
 			copyRangeIndexData(temp, indexData);
-			drawIndexedImage(ctx, indexData, palette, option.scale, paletteData);
+			drawIndexedImage(ctx, indexData, palette, option, paletteData);
 			drawPreview();
 		}
 	}
@@ -1393,7 +1699,7 @@ editor: Editor
 			pushRecord(undoData);
 
 			copyRangeIndexData(temp, indexData);
-			drawIndexedImage(ctx, indexData, palette, option.scale, paletteData);
+			drawIndexedImage(ctx, indexData, palette, option, paletteData);
 			drawPreview();
 		}
 	}
