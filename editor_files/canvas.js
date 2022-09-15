@@ -1011,8 +1011,8 @@ function drawOrimonoData(
   }
 
   // 紋栓図を描画
-  for (let x = 0; x < orimonoData.monsen_tate; x++) {
-    for (let y = 0; y < orimonoData.monsen_yoko; y++) {
+  for (let x = 0; x < orimonoData.waku_maisu; x++) {
+    for (let y = 0; y < orimonoData.soshiki_yoko; y++) {
       if (orimonoData.monsen_data[x][y] != 0) {
         drawDot(
           ctx,
@@ -1025,8 +1025,8 @@ function drawOrimonoData(
   }
 
   // 引込図を描画
-  for (let x = 0; x < orimonoData.hikikomi_tate; x++) {
-    for (let y = 0; y < orimonoData.hikikomi_yoko; y++) {
+  for (let x = 0; x < orimonoData.soshiki_tate; x++) {
+    for (let y = 0; y < orimonoData.waku_maisu; y++) {
       if (orimonoData.hikikomi_data[x][y] != 0) {
         drawDot(
           ctx,
@@ -1549,12 +1549,12 @@ function hasDiffOrimonoData(src, dst) {
     src.soshiki_tate != dst.soshiki_tate ||
     src.soshiki_yoko != dst.soshiki_yoko ||
     src.waku_maisu != dst.waku_maisu ||
-    src.kihon_data != dst.kihon_data ||
     JSON.stringify(src.kihon_data) != JSON.stringify(dst.kihon_data) ||
     JSON.stringify(src.soshiki_data) != JSON.stringify(dst.soshiki_data) ||
     JSON.stringify(src.monsen_data) != JSON.stringify(dst.monsen_data) ||
     JSON.stringify(src.hikikomi_data) != JSON.stringify(dst.hikikomi_data)
   ) {
+    // 1つでも違いがあればtrue
     return true;
   }
   return false;

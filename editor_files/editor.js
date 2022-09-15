@@ -837,6 +837,7 @@
   });
 
   $.bind($('work'), 'contextmenu', (e) => {
+    record();
     let r = work.canvas.getBoundingClientRect();
     left = window.scrollX + r.left;
     top = window.scrollY + r.top;
@@ -1626,6 +1627,7 @@
     if (temp) {
       pushRecord(redoData);
       orimonoData = copyOrimonoData(temp);
+      clear(ctx);
       drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
       drawPreview();
     }
