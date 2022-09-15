@@ -70,14 +70,7 @@ function drawSelectionRegion(ctx, x0, y0, x1, y1, scale) {
 }
 
 // ドットの表示
-function drawDotOrimono(
-  ctx,
-  x,
-  y,
-  orimonoData,
-  paletteIndex,
-  option,
-) {
+function drawDotOrimono(ctx, x, y, orimonoData, paletteIndex, option) {
   if (
     orimonoData.soshiki_min_x <= x &&
     x < orimonoData.soshiki_max_x &&
@@ -1721,7 +1714,6 @@ function copyRangeIndexData(src, dst, range) {
     n = range ? range.tail : src.data.length,
     s = src.data,
     d = dst.data;
-  //	console.log('copyRange', i, n);
   for (; i < n; i++) {
     d[i] = s[i];
   }
