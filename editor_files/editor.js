@@ -1639,8 +1639,7 @@
 
     if (temp) {
       pushRecord(undoData);
-
-      copyRangeOrimonoData(temp, orimonoData);
+      orimonoData = copyOrimonoData(temp);
       drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
       drawPreview();
     }
