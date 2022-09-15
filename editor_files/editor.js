@@ -143,7 +143,7 @@
   function zoom() {
     option.scale = option.scales[option.zoom];
     resize();
-    drawOrimonoData(ctx, orimonoData, palette, option.scale, paletteData);
+    drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
   }
 
   // 拡大
@@ -611,7 +611,6 @@
         // 引込図の列の中でONになっているドットが紋栓図の列番号を表現している
         if (orimonoData.hikikomi_data[i][j] != 0) {
           // 引き込み図の列の中でONになるのは1つだけなので見つかった時点でbreak
-          console.log('find!');
           monsen_row = j;
           break;
         }
@@ -1527,7 +1526,7 @@
         idx.height = data.height;
         const x = ((32 - idx.width) / 2) ^ 0;
         const y = ((32 - idx.height) / 2) ^ 0;
-        drawOrimonoData(ctx, idx, p, 1, 256, x, y);
+        drawOrimonoData(ctx, idx, p, option, 256, x, y);
       }
     }
   }
