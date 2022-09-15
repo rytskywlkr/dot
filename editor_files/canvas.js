@@ -15,6 +15,10 @@ function clear(ctx, indexData) {
   }
 }
 
+// キャンバスを消去する
+function clear(ctx) {
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+}
 // 破線の描画
 function strokeDashLine(ctx, x0, y0, x1, y1, s) {
   let dx = x1 - x0,
@@ -70,170 +74,155 @@ function drawDotOrimono(
   ctx,
   x,
   y,
-  indexData,
+  orimonoData,
   paletteIndex,
-  scale,
   option,
-  padding = 1
 ) {
-  let s = scale,
-    b = s - padding;
   if (
-    option.orimono.soshiki_min_x <= x &&
-    x < option.orimono.soshiki_max_x &&
-    option.orimono.soshiki_min_y <= y &&
-    y < option.orimono.soshiki_max_y
+    orimonoData.soshiki_min_x <= x &&
+    x < orimonoData.soshiki_max_x &&
+    orimonoData.soshiki_min_y <= y &&
+    y < orimonoData.soshiki_max_y
   ) {
     // 組織図にドットを描画する
     // 組織図の場合は1つのドットではなく、基本サイズ毎の同じ座標にドットを描画する必要がある
-    option.orimono.soshiki_data[x - option.orimono.soshiki_min_x][
-      y - option.orimono.soshiki_min_y
+    orimonoData.soshiki_data[x - orimonoData.soshiki_min_x][
+      y - orimonoData.soshiki_min_y
     ] = paletteIndex;
     let dot_at_kihon_x = 0,
       dot_at_kihon_y = 0;
-    for (let i = 0; i < option.orimono.kihon_data.length; i++) {
+    for (let i = 0; i < orimonoData.kihon_data.length; i++) {
       if (
-        option.orimono.kihon_data[i].kihon_min_x <= x &&
-        x <= option.orimono.kihon_data[i].kihon_max_x &&
-        option.orimono.kihon_data[i].kihon_min_y <= y &&
-        y <= option.orimono.kihon_data[i].kihon_max_y
+        orimonoData.kihon_data[i].kihon_min_x <= x &&
+        x <= orimonoData.kihon_data[i].kihon_max_x &&
+        orimonoData.kihon_data[i].kihon_min_y <= y &&
+        y <= orimonoData.kihon_data[i].kihon_max_y
       ) {
-        dot_at_kihon_x = x - option.orimono.kihon_data[i].kihon_min_x;
-        dot_at_kihon_y = y - option.orimono.kihon_data[i].kihon_min_y;
+        dot_at_kihon_x = x - orimonoData.kihon_data[i].kihon_min_x;
+        dot_at_kihon_y = y - orimonoData.kihon_data[i].kihon_min_y;
         break;
       }
     }
-    for (let i = 0; i < option.orimono.kihon_data.length; i++) {
+    for (let i = 0; i < orimonoData.kihon_data.length; i++) {
       // 表全体の一番左下からみた座標（基本毎の最小座標と基本毎の座標を加算）
-      let x_at_all = option.orimono.kihon_data[i].kihon_min_x + dot_at_kihon_x;
-      let y_at_all = option.orimono.kihon_data[i].kihon_min_y + dot_at_kihon_y;
-      drawDot(ctx, x_at_all, y_at_all, indexData, paletteIndex, scale);
+      let x_at_all = orimonoData.kihon_data[i].kihon_min_x + dot_at_kihon_x;
+      let y_at_all = orimonoData.kihon_data[i].kihon_min_y + dot_at_kihon_y;
+      drawDot(ctx, x_at_all, y_at_all, option.scale);
       // 基本図の一番左下からみた座標（上記から枠枚数と空白1を減算）
-      let x_at_soshiki = x_at_all - option.orimono.soshiki_min_x;
-      let y_at_soshiki = y_at_all - option.orimono.soshiki_min_y;
-      option.orimono.soshiki_data[x_at_soshiki][y_at_soshiki] = paletteIndex;
+      let x_at_soshiki = x_at_all - orimonoData.soshiki_min_x;
+      let y_at_soshiki = y_at_all - orimonoData.soshiki_min_y;
+      orimonoData.soshiki_data[x_at_soshiki][y_at_soshiki] = paletteIndex;
     }
   } else if (
-    option.orimono.monsen_min_x <= x &&
-    x < option.orimono.monsen_max_x &&
-    option.orimono.monsen_min_y <= y &&
-    y < option.orimono.monsen_max_y
+    orimonoData.monsen_min_x <= x &&
+    x < orimonoData.monsen_max_x &&
+    orimonoData.monsen_min_y <= y &&
+    y < orimonoData.monsen_max_y
   ) {
     // 紋栓図にドットを描画する
     // 紋栓図の場合は1つのドットを描画するだけ
-    drawDot(ctx, x, y, indexData, paletteIndex, scale);
-    option.orimono.monsen_data[x - option.orimono.monsen_min_x][
-      y - option.orimono.monsen_min_y
+    drawDot(ctx, x, y, option.scale);
+    orimonoData.monsen_data[x - orimonoData.monsen_min_x][
+      y - orimonoData.monsen_min_y
     ] = paletteIndex;
   } else if (
-    option.orimono.hikikomi_min_x <= x &&
-    x < option.orimono.hikikomi_max_x &&
-    option.orimono.hikikomi_min_y <= y &&
-    y < option.orimono.hikikomi_max_y
+    orimonoData.hikikomi_min_x <= x &&
+    x < orimonoData.hikikomi_max_x &&
+    orimonoData.hikikomi_min_y <= y &&
+    y < orimonoData.hikikomi_max_y
   ) {
     // 引込図にドットを描画する
     // 引込図の場合は1列に1ドットと決まっているので、列のドットをクリアしてからドットを描画する
-    for (let i = 0; i < option.orimono.hikikomi_max_y; i++) {
-      clearDot(ctx, x, i, indexData, scale);
-      option.orimono.hikikomi_data[x - option.orimono.hikikomi_min_x][i] = 0;
+    for (let i = 0; i < orimonoData.hikikomi_max_y; i++) {
+      clearDot(ctx, x, i, option.scale);
+      orimonoData.hikikomi_data[x - orimonoData.hikikomi_min_x][i] = 0;
     }
-    drawDot(ctx, x, y, indexData, paletteIndex, scale);
-    option.orimono.hikikomi_data[x - option.orimono.hikikomi_min_x][
-      y - option.orimono.hikikomi_min_y
+    drawDot(ctx, x, y, option.scale);
+    orimonoData.hikikomi_data[x - orimonoData.hikikomi_min_x][
+      y - orimonoData.hikikomi_min_y
     ] = paletteIndex;
   } else {
     // 上記以外の場所がクリックされてもドットは描画しない
   }
 }
 
-function clearDotOrimono(ctx, x, y, indexData, option, padding = 1) {
+function clearDotOrimono(ctx, x, y, orimonoData, option, padding = 1) {
   let s = option.scale,
     b = s - padding;
   if (
-    option.orimono.soshiki_min_x <= x &&
-    x < option.orimono.soshiki_max_x &&
-    option.orimono.soshiki_min_y <= y &&
-    y < option.orimono.soshiki_max_y
+    orimonoData.soshiki_min_x <= x &&
+    x < orimonoData.soshiki_max_x &&
+    orimonoData.soshiki_min_y <= y &&
+    y < orimonoData.soshiki_max_y
   ) {
-    option.orimono.soshiki_data[x - option.orimono.soshiki_min_x][
-      y - option.orimono.soshiki_min_y
+    orimonoData.soshiki_data[x - orimonoData.soshiki_min_x][
+      y - orimonoData.soshiki_min_y
     ] = 0;
     let dot_at_kihon_x = 0,
       dot_at_kihon_y = 0;
-    for (let i = 0; i < option.orimono.kihon_data.length; i++) {
+    for (let i = 0; i < orimonoData.kihon_data.length; i++) {
       if (
-        option.orimono.kihon_data[i].kihon_min_x <= x &&
-        x <= option.orimono.kihon_data[i].kihon_max_x &&
-        option.orimono.kihon_data[i].kihon_min_y <= y &&
-        y <= option.orimono.kihon_data[i].kihon_max_y
+        orimonoData.kihon_data[i].kihon_min_x <= x &&
+        x <= orimonoData.kihon_data[i].kihon_max_x &&
+        orimonoData.kihon_data[i].kihon_min_y <= y &&
+        y <= orimonoData.kihon_data[i].kihon_max_y
       ) {
-        dot_at_kihon_x = x - option.orimono.kihon_data[i].kihon_min_x;
-        dot_at_kihon_y = y - option.orimono.kihon_data[i].kihon_min_y;
+        dot_at_kihon_x = x - orimonoData.kihon_data[i].kihon_min_x;
+        dot_at_kihon_y = y - orimonoData.kihon_data[i].kihon_min_y;
         break;
       }
     }
-    for (let i = 0; i < option.orimono.kihon_data.length; i++) {
-      let x_at_all = option.orimono.kihon_data[i].kihon_min_x + dot_at_kihon_x;
-      let y_at_all = option.orimono.kihon_data[i].kihon_min_y + dot_at_kihon_y;
-      clearDot(ctx, x_at_all, y_at_all, indexData, option.scale);
-      let x_at_soshiki = x_at_all - option.orimono.soshiki_min_x;
-      let y_at_soshiki = y_at_all - option.orimono.soshiki_min_y;
-      option.orimono.soshiki_data[x_at_soshiki][y_at_soshiki] = 0;
+    for (let i = 0; i < orimonoData.kihon_data.length; i++) {
+      let x_at_all = orimonoData.kihon_data[i].kihon_min_x + dot_at_kihon_x;
+      let y_at_all = orimonoData.kihon_data[i].kihon_min_y + dot_at_kihon_y;
+      clearDot(ctx, x_at_all, y_at_all, option.scale);
+      let x_at_soshiki = x_at_all - orimonoData.soshiki_min_x;
+      let y_at_soshiki = y_at_all - orimonoData.soshiki_min_y;
+      orimonoData.soshiki_data[x_at_soshiki][y_at_soshiki] = 0;
     }
   } else if (
-    option.orimono.monsen_min_x <= x &&
-    x < option.orimono.monsen_max_x &&
-    option.orimono.monsen_min_y <= y &&
-    y < option.orimono.monsen_max_y
+    orimonoData.monsen_min_x <= x &&
+    x < orimonoData.monsen_max_x &&
+    orimonoData.monsen_min_y <= y &&
+    y < orimonoData.monsen_max_y
   ) {
-    clearDot(ctx, x, y, indexData, option.scale);
-    option.orimono.monsen_data[x - option.orimono.monsen_min_x][
-      y - option.orimono.monsen_min_y
+    clearDot(ctx, x, y, option.scale);
+    orimonoData.monsen_data[x - orimonoData.monsen_min_x][
+      y - orimonoData.monsen_min_y
     ] = 0;
   } else if (
-    option.orimono.hikikomi_min_x <= x &&
-    x < option.orimono.hikikomi_max_x &&
-    option.orimono.hikikomi_min_y <= y &&
-    y < option.orimono.hikikomi_max_y
+    orimonoData.hikikomi_min_x <= x &&
+    x < orimonoData.hikikomi_max_x &&
+    orimonoData.hikikomi_min_y <= y &&
+    y < orimonoData.hikikomi_max_y
   ) {
-    clearDot(ctx, x, y, indexData, option.scale);
-    option.orimono.hikikomi_data[x - option.orimono.hikikomi_min_x][
-      y - option.orimono.hikikomi_min_y
+    clearDot(ctx, x, y, option.scale);
+    orimonoData.hikikomi_data[x - orimonoData.hikikomi_min_x][
+      y - orimonoData.hikikomi_min_y
     ] = 0;
   }
 }
 
 // ドットの表示
-function drawDot(ctx, x, y, indexData, paletteIndex, scale, padding = 1) {
+function drawDot(ctx, x, y, scale, padding = 1) {
   let s = scale,
     b = s - padding;
   ctx.fillRect(x * s + padding, y * s - padding, b, b);
-  if (indexData) indexData.data[y * indexData.width + x] = paletteIndex;
+  // if (indexData) indexData.data[y * indexData.width + x] = paletteIndex;
 }
 
-function clearDot(ctx, x, y, indexData, scale, padding = 1) {
+function clearDot(ctx, x, y, scale, padding = 1) {
   let s = scale,
     b = s - padding;
   ctx.clearRect(x * s + padding, y * s - padding, b, b);
-  if (indexData) indexData.data[y * indexData.width + x] = 0;
 }
 
-function clearDots(
-  ctx,
-  start_x,
-  start_y,
-  end_x,
-  end_y,
-  indexData,
-  scale,
-  padding = 1
-) {
+function clearDots(ctx, start_x, start_y, end_x, end_y, scale, padding = 1) {
   let s = scale,
     b = s - padding;
   for (let x = start_x; x <= end_x; x++) {
     for (let y = start_y; y <= end_y; y++) {
       ctx.clearRect(x * s + padding, y * s - padding, b, b);
-      if (indexData) indexData.data[y * indexData.width + x] = 0;
     }
   }
 }
@@ -421,7 +410,7 @@ function paintTone(ctx, x, y, indexData, paletteIndex, scale) {
     h = indexData.height,
     c = data[y * w + x],
     s = scale,
-    tmpIndexData = createIndexData(w, h),
+    tmpIndexData = createOrimonoData(w, h),
     tmp = tmpIndexData.data,
     tone = (x & 1) ^ (y & 1);
 
@@ -465,7 +454,7 @@ function drawOutline(ctx, x, y, indexData, paletteIndex, scale) {
     h = indexData.height,
     c = data[y * w + x],
     s = scale,
-    tmpIndexData = createIndexData(w, h),
+    tmpIndexData = createOrimonoData(w, h),
     tmp = tmpIndexData.data;
 
   if (c == paletteIndex) {
@@ -847,7 +836,7 @@ function fillEllipse(ctx, x0, y0, x1, y1, indexData, paletteIndex, scale) {
 }
 
 // グリッドを表示する
-function drawGrid(ctx, option, indexData) {
+function drawGrid(ctx, option, orimonoData) {
   let size = option.scale;
   ctx.strokeStyle = option.grid.color1;
   ctx.lineWidth = 1.0;
@@ -856,17 +845,15 @@ function drawGrid(ctx, option, indexData) {
   // 関連図縦線（関連図というのは造語。左下の紋栓図と引込図を関連付けるもの）
   let kanren_x_start = 0;
   let kanren_y_start = 0;
-  let kanren_tate_length =
-    option.orimono.waku_maisu * option.scales[option.zoom];
-  let kanren_yoko_length =
-    option.orimono.waku_maisu * option.scales[option.zoom];
-  for (let i = 0; i <= option.orimono.waku_maisu; i++) {
+  let kanren_tate_length = orimonoData.waku_maisu * option.scales[option.zoom];
+  let kanren_yoko_length = orimonoData.waku_maisu * option.scales[option.zoom];
+  for (let i = 0; i <= orimonoData.waku_maisu; i++) {
     let x = kanren_x_start + (size * i - (i == 0 ? -0.5 : 0.5)); // 関連図縦1本目はcanvasの縁になるので0.5にすると見えなくなる
     ctx.moveTo(x, kanren_y_start);
     ctx.lineTo(x, kanren_tate_length);
   }
   // 関連図横線
-  for (let i = 0; i <= option.orimono.soshiki_tate; i++) {
+  for (let i = 0; i <= orimonoData.soshiki_tate; i++) {
     let y = kanren_y_start + (size * i - (i == 0 ? -0.5 : 0.5)); // 関連図横1本目はcanvasの縁になるので0.5にすると見えなくなる
     ctx.moveTo(kanren_y_start, y);
     ctx.lineTo(kanren_yoko_length, y);
@@ -874,62 +861,61 @@ function drawGrid(ctx, option, indexData) {
 
   // 関連図ドット（関連図だけ左下から右上に紋栓図と引込図を関連を表すドットが必要）
   ctx.fillStyle = 'rgb(0, 0, 0)';
-  for (let i = 0; i < option.orimono.waku_maisu; i++) {
-    drawDot(ctx, i, i, indexData, 0, option.scale, 0);
+  for (let i = 0; i < orimonoData.waku_maisu; i++) {
+    drawDot(ctx, i, i, option.scale, 0);
   }
   // 紋栓図縦線
   let monsen_x_start = 0;
-  let monsen_y_start = size * (option.orimono.waku_maisu + 1);
+  let monsen_y_start = size * (orimonoData.waku_maisu + 1);
   let monsen_tate_length =
-    option.orimono.soshiki_yoko * option.scales[option.zoom];
-  let monsen_yoko_length =
-    option.orimono.waku_maisu * option.scales[option.zoom];
-  for (let i = 0; i <= option.orimono.waku_maisu; i++) {
+    orimonoData.soshiki_yoko * option.scales[option.zoom];
+  let monsen_yoko_length = orimonoData.waku_maisu * option.scales[option.zoom];
+  for (let i = 0; i <= orimonoData.waku_maisu; i++) {
     let x = monsen_x_start + (size * i - (i == 0 ? -0.5 : 0.5)); // 紋栓図縦1本目はcanvasの縁になるので0.5にすると見えなくなる
     ctx.moveTo(x, monsen_y_start);
     ctx.lineTo(x, monsen_y_start + monsen_tate_length);
   }
 
   // 紋栓図横線
-  for (let i = 0; i <= option.orimono.soshiki_yoko; i++) {
+  for (let i = 0; i <= orimonoData.soshiki_yoko; i++) {
     let y = monsen_y_start + (size * i - 0.5);
     ctx.moveTo(monsen_x_start, y);
     ctx.lineTo(monsen_yoko_length, y);
   }
 
   // 組織図縦線
-  let soshiki_x_start = size * (option.orimono.waku_maisu + 1);
-  let soshiki_y_start = size * (option.orimono.waku_maisu + 1);
+  let soshiki_x_start = size * (orimonoData.waku_maisu + 1);
+  let soshiki_y_start = size * (orimonoData.waku_maisu + 1);
   let soshiki_tate_length =
-    option.orimono.soshiki_yoko * option.scales[option.zoom];
+    orimonoData.soshiki_yoko * option.scales[option.zoom];
   let soshiki_yoko_length =
-    option.orimono.soshiki_tate * option.scales[option.zoom];
-  for (let i = 0; i <= option.orimono.soshiki_tate; i++) {
+    orimonoData.soshiki_tate * option.scales[option.zoom];
+  for (let i = 0; i <= orimonoData.soshiki_tate; i++) {
     let x = soshiki_x_start + (size * i - 0.5);
     ctx.moveTo(x, soshiki_y_start);
     ctx.lineTo(x, soshiki_y_start + soshiki_tate_length);
   }
   // 組織図横線
-  for (let i = 0; i <= option.orimono.soshiki_yoko; i++) {
+  for (let i = 0; i <= orimonoData.soshiki_yoko; i++) {
     let y = soshiki_y_start + (size * i - 0.5);
     ctx.moveTo(soshiki_x_start, y);
     ctx.lineTo(soshiki_x_start + soshiki_yoko_length, y);
   }
 
   // 引込図縦線
-  let hikikomi_x_start = size * (option.orimono.waku_maisu + 1);
+  let hikikomi_x_start = size * (orimonoData.waku_maisu + 1);
   let hikikomi_y_start = 0;
   let hikikomi_tate_length =
-    option.orimono.waku_maisu * option.scales[option.zoom];
+    orimonoData.waku_maisu * option.scales[option.zoom];
   let hikikomi_yoko_length =
-    option.orimono.soshiki_tate * option.scales[option.zoom];
-  for (let i = 0; i <= option.orimono.soshiki_tate; i++) {
+    orimonoData.soshiki_tate * option.scales[option.zoom];
+  for (let i = 0; i <= orimonoData.soshiki_tate; i++) {
     let x = hikikomi_x_start + (size * i - 0.5);
     ctx.moveTo(x, hikikomi_y_start);
     ctx.lineTo(x, hikikomi_y_start + hikikomi_tate_length);
   }
   // 引込図横線
-  for (let i = 0; i <= option.orimono.waku_maisu; i++) {
+  for (let i = 0; i <= orimonoData.waku_maisu; i++) {
     let y = hikikomi_y_start + (size * i - (i == 0 ? -0.5 : 0.5)); // 引込図横1本目はcanvasの縁になるので0.5にすると見えなくなる
     ctx.moveTo(hikikomi_x_start, y);
     ctx.lineTo(hikikomi_x_start + hikikomi_yoko_length, y);
@@ -942,16 +928,16 @@ function drawGrid(ctx, option, indexData) {
   ctx.beginPath();
 
   // 紋栓図縦線太線
-  for (let i = 0; i <= option.orimono.waku_maisu; i++) {
-    if (i % option.orimono.waku_maisu == 0) {
+  for (let i = 0; i <= orimonoData.waku_maisu; i++) {
+    if (i % orimonoData.waku_maisu == 0) {
       let x = monsen_x_start + (size * i - (i == 0 ? -0.5 : 0.5)); // 紋栓図縦1本目はcanvasの縁になるので0.5にすると見えなくなる
       ctx.moveTo(x, monsen_y_start);
       ctx.lineTo(x, monsen_y_start + monsen_tate_length);
     }
   }
   // 紋栓図横線太線
-  for (let i = 0; i <= option.orimono.soshiki_yoko; i++) {
-    if (i % option.orimono.kihon_yoko == 0) {
+  for (let i = 0; i <= orimonoData.soshiki_yoko; i++) {
+    if (i % orimonoData.kihon_yoko == 0) {
       let y = monsen_y_start + (size * i - 0.5);
       ctx.moveTo(monsen_x_start, y);
       ctx.lineTo(monsen_yoko_length, y);
@@ -959,16 +945,16 @@ function drawGrid(ctx, option, indexData) {
   }
 
   // 組織図縦線太線
-  for (let i = 0; i <= option.orimono.soshiki_tate; i++) {
-    if (i % option.orimono.kihon_tate == 0) {
+  for (let i = 0; i <= orimonoData.soshiki_tate; i++) {
+    if (i % orimonoData.kihon_tate == 0) {
       let x = soshiki_x_start + (size * i - 0.5);
       ctx.moveTo(x, soshiki_y_start);
       ctx.lineTo(x, soshiki_y_start + soshiki_tate_length);
     }
   }
   // 組織図横線太線
-  for (let i = 0; i <= option.orimono.soshiki_yoko; i++) {
-    if (i % option.orimono.kihon_yoko == 0) {
+  for (let i = 0; i <= orimonoData.soshiki_yoko; i++) {
+    if (i % orimonoData.kihon_yoko == 0) {
       let y = soshiki_y_start + (size * i - 0.5);
       ctx.moveTo(soshiki_x_start, y);
       ctx.lineTo(soshiki_x_start + soshiki_yoko_length, y);
@@ -976,16 +962,16 @@ function drawGrid(ctx, option, indexData) {
   }
 
   // 引込図縦線太線
-  for (let i = 0; i <= option.orimono.soshiki_tate; i++) {
-    if (i % option.orimono.kihon_tate == 0) {
+  for (let i = 0; i <= orimonoData.soshiki_tate; i++) {
+    if (i % orimonoData.kihon_tate == 0) {
       let x = hikikomi_x_start + (size * i - 0.5);
       ctx.moveTo(x, hikikomi_y_start);
       ctx.lineTo(x, hikikomi_y_start + hikikomi_tate_length);
     }
   }
   // 引込図横線
-  for (let i = 0; i <= option.orimono.waku_maisu; i++) {
-    if (i % option.orimono.waku_maisu == 0) {
+  for (let i = 0; i <= orimonoData.waku_maisu; i++) {
+    if (i % orimonoData.waku_maisu == 0) {
       let y = hikikomi_y_start + (size * i - (i == 0 ? -0.5 : 0.5)); // 引込図横1本目はcanvasの縁になるので0.5にすると見えなくなる
       ctx.moveTo(hikikomi_x_start, y);
       ctx.lineTo(hikikomi_x_start + hikikomi_yoko_length, y);
@@ -1009,112 +995,55 @@ function drawGrid(ctx, option, indexData) {
 /////////////////////////////////////////////////////
 
 // インデックスカラーイメージを描画する
-function drawIndexedImage(
+function drawOrimonoData(
   ctx,
-  image,
+  orimonoData,
   palette,
   option,
   paletteData,
   transparent
 ) {
-  let data = image.data,
-    size = option.scale,
-    w = image.width,
-    h = image.height,
-    l = w * h,
-    total = 0;
-  /*
-	for(let k = 0, n = palette.length; k < n; k++) {
-		let count = 0,
-			index = 0;
-		ctx.beginPath();
-		
-		for(let i = 0; i < h && count < l; i++) {
-			let y = i * size,
-				f = false,
-				len = 0,
-				x = 0;
-			for(let j = 0; j < w; j++) {
-				if(data[index] === k) {
-					if(len === 0) {
-						x = j;
-					}
-					count++;
-					len++;
-				} else {
-					if(len) {
-						ctx.rect(x * size, y, size * len, size);
-						len = 0;
-					}
-				}
-				index++;
-			}
-			if(len) {
-				ctx.rect(x * size, y, size * len, size);
-			}
-		}
-		if(count > 0) {
-			ctx.fillStyle = palette[k];
-			ctx.fill();
-			total += count;
-			if(total === l) {
-				break;
-			}
-		}
-	}
-	*/
-
-  //	for(let k = 0, n = palette.length; k < n; k++) {
-  //		ctx.fillStyle = palette[k];
-  //		for(let i = 0; i < h; i++) {
-  //			for(let j = 0; j < w; j++) {
-  //				if(data[i * w + j] === k) {
-  //					ctx.fillRect(j * size, i * size, size, size);
-  //				}
-  //			}
-  //		}
-  //	}
-
-  // TODOこのやり方が簡単な気もするが性能の問題なのか？
-  let x = 0,
-    y = 0;
-  for (let i = 0; i < data.length; i++) {
-    if (data[i] != 0) {
-      x = i % w;
-      y = Math.floor(i / w);
-      drawDot(ctx, x, y, image, data[i], option.scale);
+  // 組織図を描画
+  for (let x = 0; x < orimonoData.soshiki_tate; x++) {
+    for (let y = 0; y < orimonoData.soshiki_yoko; y++) {
+      if (orimonoData.soshiki_data[x][y] != 0) {
+        drawDot(
+          ctx,
+          x + orimonoData.soshiki_min_x,
+          y + orimonoData.soshiki_min_y,
+          option.scale
+        );
+      }
     }
   }
-  // 	let dw = w * size,
-  // 		dh = h * size,
-  // 		dst = ctx.createImageData(dw, dh),
-  // 		dstData = dst.data,
-  // 		u32image = new Uint32Array(dst.data.buffer),
-  // 		u32palette = new Uint32Array(paletteData.data.buffer),
-  // 		k = 0,
-  // 		p = paletteData.data;
-  // 	for(let i = 0; i < dh; i++) {
-  // 		let y = (i / size ^ 0) * w;
-  // 		for(let j = 0; j < dw; j++) {
-  // //			let x = j / size ^ 0,
-  // //				index = data[y + x] * 4;
-  // //			if(index !== transparent) {
-  // //				dstData[k] = p[index];
-  // //				dstData[k + 1] = p[index + 1];
-  // //				dstData[k + 2] = p[index + 2];
-  // //				dstData[k + 3] = 255;
-  // //			}
-  // //			k += 4;
 
-  // 			let x = j / size ^ 0,
-  // 				index = data[y + x];
-  // 			if(index !== transparent) {
-  // 				u32image[k] = u32palette[index];
-  // 			}
-  // 			k++;
-  // 		}
-  // 	}
-  // 	ctx.putImageData(dst, 0, 0);
+  // 紋栓図を描画
+  for (let x = 0; x < orimonoData.monsen_tate; x++) {
+    for (let y = 0; y < orimonoData.monsen_yoko; y++) {
+      if (orimonoData.monsen_data[x][y] != 0) {
+        drawDot(
+          ctx,
+          x + orimonoData.monsen_min_x,
+          y + orimonoData.monsen_min_y,
+          option.scale
+        );
+      }
+    }
+  }
+
+  // 引込図を描画
+  for (let x = 0; x < orimonoData.hikikomi_tate; x++) {
+    for (let y = 0; y < orimonoData.hikikomi_yoko; y++) {
+      if (orimonoData.hikikomi_data[x][y] != 0) {
+        drawDot(
+          ctx,
+          x + orimonoData.hikikomi_min_x,
+          y + orimonoData.hikikomi_min_y,
+          option.scale
+        );
+      }
+    }
+  }
 }
 
 // 範囲指定してインデックスカラーイメージを描画する
@@ -1154,40 +1083,40 @@ function drawRangeIndexedImage(
   ctx.putImageData(dst, 0, 0);
 }
 
-function drawIndexedImageData(
-  ctx,
-  image,
-  palette,
-  scale,
-  transparent,
-  left,
-  top
-) {
-  let index = 0,
-    data = image.data,
-    paletteData = palette.data,
-    dest = ctx.createImageData(image.width * scale, image.height * scale),
-    w = dest.width,
-    h = dest.height,
-    stride = image.width,
-    destData = dest.data,
-    t = transparent === undefined ? 256 : transparent;
-  (left = left === undefined ? 0 : left), (top = top === undefined ? 0 : top);
-  for (let i = 0, p = 0; i < h; i++) {
-    let y = (i / scale) ^ 0;
-    for (let j = 0; j < w; j++) {
-      let x = (j / scale) ^ 0;
-      index = y * stride + x;
-      let pindex = data[index] * 4;
-      destData[p] = paletteData[pindex];
-      destData[p + 1] = paletteData[pindex + 1];
-      destData[p + 2] = paletteData[pindex + 2];
-      destData[p + 3] = t === data[index] ? 0 : 255;
-      p += 4;
-    }
-  }
-  ctx.putImageData(dest, left, top);
-}
+// function drawOrimonoData(
+//   ctx,
+//   orimonoData,
+//   palette,
+//   scale,
+//   transparent,
+//   left,
+//   top
+// ) {
+//   let index = 0,
+//     data = image.data,
+//     paletteData = palette.data,
+//     dest = ctx.createImageData(image.width * scale, image.height * scale),
+//     w = dest.width,
+//     h = dest.height,
+//     stride = image.width,
+//     destData = dest.data,
+//     t = transparent === undefined ? 256 : transparent;
+//   (left = left === undefined ? 0 : left), (top = top === undefined ? 0 : top);
+//   for (let i = 0, p = 0; i < h; i++) {
+//     let y = (i / scale) ^ 0;
+//     for (let j = 0; j < w; j++) {
+//       let x = (j / scale) ^ 0;
+//       index = y * stride + x;
+//       let pindex = data[index] * 4;
+//       destData[p] = paletteData[pindex];
+//       destData[p + 1] = paletteData[pindex + 1];
+//       destData[p + 2] = paletteData[pindex + 2];
+//       destData[p + 3] = t === data[index] ? 0 : 255;
+//       p += 4;
+//     }
+//   }
+//   ctx.putImageData(dest, left, top);
+// }
 
 // タイリングして描画する
 function tilingIndexedImageData(
@@ -1335,7 +1264,7 @@ function rotate90R(ctx, indexData) {
     flipImageH(buffer, imageData.width, imageData.height);
     ctx.putImageData(imageData, 0, 0);
   } else {
-    let temp = createIndexData(h, w);
+    let temp = createOrimonoData(h, w);
     copyMirrorImageXY(data, temp.data, w, h);
     flipImageH(temp.data, temp.width, temp.height);
     copyBuffer(temp.data, data, w * h);
@@ -1372,7 +1301,7 @@ function rotate90L(ctx, indexData) {
     flipImageV(buffer, imageData.width, imageData.height);
     ctx.putImageData(imageData, 0, 0);
   } else {
-    let temp = createIndexData(h, w);
+    let temp = createOrimonoData(h, w);
     copyMirrorImageXY(data, temp.data, w, h);
     flipImageV(temp.data, temp.width, temp.height);
     copyBuffer(temp.data, data, w * h);
@@ -1419,7 +1348,7 @@ function shiftH(ctx, indexData, shift, scale) {
   let data = indexData.data,
     w = indexData.width,
     h = indexData.height,
-    tmp = createIndexData(w, h);
+    tmp = createOrimonoData(w, h);
   shiftImageH(data, tmp.data, w, h, shift);
   copyBuffer(tmp.data, indexData.data, tmp.data.length);
 
@@ -1481,7 +1410,7 @@ function shiftV(ctx, indexData, shift, scale) {
   let data = indexData.data,
     w = indexData.width,
     h = indexData.height,
-    tmp = createIndexData(w, h);
+    tmp = createOrimonoData(w, h);
   shiftImageV(data, tmp.data, w, h, shift);
   copyBuffer(tmp.data, indexData.data, tmp.data.length);
 
@@ -1620,22 +1549,137 @@ function applyDiffIndexData(head, tail, diff, dst) {
 }
 
 // 画像に差分があるか判定する
-function hasDiffIndexData(src, dst) {
-  for (let i = 0, n = src.length; i < n; i++) {
-    if (dst[i] !== src[i]) {
-      return true;
-    }
+function hasDiffOrimonoData(src, dst) {
+  if (
+    src.kihon_tate != dst.kihon_tate ||
+    src.kihon_yoko != dst.kihon_yoko ||
+    src.soshiki_tate != dst.soshiki_tate ||
+    src.soshiki_yoko != dst.soshiki_yoko ||
+    src.waku_maisu != dst.waku_maisu ||
+    src.kihon_data != dst.kihon_data ||
+    JSON.stringify(src.kihon_data) != JSON.stringify(dst.kihon_data) ||
+    JSON.stringify(src.soshiki_data) != JSON.stringify(dst.soshiki_data) ||
+    JSON.stringify(src.monsen_data) != JSON.stringify(dst.monsen_data) ||
+    JSON.stringify(src.hikikomi_data) != JSON.stringify(dst.hikikomi_data)
+  ) {
+    return true;
   }
   return false;
 }
 
 // インデックスデータの作成
-function createIndexData(w, h) {
+function createOrimonoData(
+  kihon_tate,
+  kihon_yoko,
+  soshiki_tate,
+  soshiki_yoko,
+  waku_maisu,
+  scale
+) {
+  // 基本データを生成する
+  let kihon_count = 0;
+
+  //組織の縦に基本が何枚入るか計算
+  let kihon_tate_count = Math.ceil(soshiki_yoko / kihon_yoko);
+
+  //組織の横に基本が何枚入るか計算
+  let kihon_yoko_count = Math.ceil(soshiki_tate / kihon_tate);
+
+  // 基本データを作成する
+  let kihon_data = [];
+  for (let i = 0; i < kihon_tate_count; i++) {
+    for (let j = 0; j < kihon_yoko_count; j++) {
+      for (let k = 0; k < kihon_yoko; k++) {
+        kihon_data[kihon_count] = [];
+        kihon_data[kihon_count][k] = new Uint8Array(kihon_tate);
+      }
+      kihon_data[kihon_count].kihon_min_x = waku_maisu + 1 + kihon_yoko * j;
+      kihon_data[kihon_count].kihon_min_y = waku_maisu + 1 + kihon_tate * i;
+      kihon_data[kihon_count].kihon_max_x =
+        kihon_data[kihon_count].kihon_min_x + kihon_yoko - 1;
+      kihon_data[kihon_count].kihon_max_y =
+        kihon_data[kihon_count].kihon_min_y + kihon_tate - 1;
+      kihon_count++;
+    }
+  }
+
+  // 組織データを生成する
+  let soshiki_data = [];
+  for (let i = 0; i < soshiki_tate; i++) {
+    soshiki_data[i] = new Uint8Array(soshiki_yoko);
+  }
+  let soshiki_min_x = waku_maisu + 1; // 空白の+1
+  let soshiki_min_y = waku_maisu + 1; // 空白の+1
+  let soshiki_max_x = soshiki_min_x + soshiki_tate;
+  let soshiki_max_y = soshiki_min_y + soshiki_yoko;
+
+  // 紋栓データを生成する
+  let monsen_data = [];
+  for (let i = 0; i < waku_maisu; i++) {
+    monsen_data[i] = new Uint8Array(soshiki_yoko);
+  }
+  let monsen_min_x = 0;
+  let monsen_min_y = waku_maisu + 1; // 空白の+1
+  let monsen_max_x = monsen_min_x + waku_maisu;
+  let monsen_max_y = monsen_min_y + soshiki_yoko;
+
+  // 引込データを生成する
+  let hikikomi_data = [];
+  for (let i = 0; i < soshiki_tate; i++) {
+    hikikomi_data[i] = new Uint8Array(waku_maisu);
+  }
+  let hikikomi_min_x = waku_maisu + 1; // 空白の+1
+  let hikikomi_min_y = 0;
+  let hikikomi_max_x = hikikomi_min_x + soshiki_yoko;
+  let hikikomi_max_y = hikikomi_min_y + waku_maisu;
   return {
-    width: w,
-    height: h,
-    //		data: new Uint8ClampedArray(w * h)
-    data: new Uint8Array(w * h),
+    kihon_tate: kihon_tate,
+    kihon_yoko: kihon_yoko,
+    soshiki_tate: soshiki_tate,
+    soshiki_yoko: soshiki_yoko,
+    waku_maisu: waku_maisu,
+    kihon_data: kihon_data,
+    soshiki_data: soshiki_data,
+    monsen_data: monsen_data,
+    hikikomi_data: hikikomi_data,
+    soshiki_min_x: soshiki_min_x,
+    soshiki_min_y: soshiki_min_y,
+    soshiki_max_x: soshiki_max_x,
+    soshiki_max_y: soshiki_max_y,
+    monsen_min_x: monsen_min_x,
+    monsen_min_y: monsen_min_y,
+    monsen_max_x: monsen_max_x,
+    monsen_max_y: monsen_max_y,
+    hikikomi_min_x: hikikomi_min_x,
+    hikikomi_min_y: hikikomi_min_y,
+    hikikomi_max_x: hikikomi_max_x,
+    hikikomi_max_y: hikikomi_max_y,
+  };
+}
+
+function copyOrimonoData(orimonoData) {
+  return {
+    kihon_tate: orimonoData.kihon_tate,
+    kihon_yoko: orimonoData.kihon_yoko,
+    soshiki_tate: orimonoData.soshiki_tate,
+    soshiki_yoko: orimonoData.soshiki_yoko,
+    waku_maisu: orimonoData.waku_maisu,
+    kihon_data: structuredClone(orimonoData.kihon_data),
+    soshiki_data: structuredClone(orimonoData.soshiki_data),
+    monsen_data: structuredClone(orimonoData.monsen_data),
+    hikikomi_data: structuredClone(orimonoData.hikikomi_data),
+    soshiki_min_x: orimonoData.soshiki_min_x,
+    soshiki_min_y: orimonoData.soshiki_min_y,
+    soshiki_max_x: orimonoData.soshiki_max_x,
+    soshiki_max_y: orimonoData.soshiki_max_y,
+    monsen_min_x: orimonoData.monsen_min_x,
+    monsen_min_y: orimonoData.monsen_min_y,
+    monsen_max_x: orimonoData.monsen_max_x,
+    monsen_max_y: orimonoData.monsen_max_y,
+    hikikomi_min_x: orimonoData.hikikomi_min_x,
+    hikikomi_min_y: orimonoData.hikikomi_min_y,
+    hikikomi_max_x: orimonoData.hikikomi_max_x,
+    hikikomi_max_y: orimonoData.hikikomi_max_y,
   };
 }
 
@@ -1652,7 +1696,7 @@ function createPaletteData(n) {
 function scaling(indexData, scale) {
   let w = (indexData.width * scale) ^ 0,
     h = (indexData.height * scale) ^ 0,
-    dst = createIndexData(w, h),
+    dst = createOrimonoData(w, h),
     stride = indexData.width,
     d = dst.data,
     s = indexData.data;
