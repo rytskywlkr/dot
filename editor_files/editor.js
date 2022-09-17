@@ -89,7 +89,7 @@
   const selection = {
     region: { x: 0, y: 0, w: 0, h: 0 },
     enable: false,
-    orimonoData: null,
+    selectionData: null,
     transparent: false,
   };
 
@@ -125,6 +125,12 @@
     work.canvas.height = canvas.height;
     errorCtx.canvas.width = canvas.width;
     errorCtx.canvas.height = canvas.height;
+
+    // editor-canvasにもheightを指定することでselectionCtxをbottomから指定できるようにする（widthはついで）
+    document.getElementById('editor-canvas').style.width = canvas.width + 'px';
+    document.getElementById('editor-canvas').style.height =
+      canvas.height + 'px';
+
     if (selection.enable) {
     }
     for (let i = 0; i < Layer.count(); i++) {
@@ -138,6 +144,8 @@
     work.scale(1, -1); // 上記に伴いY軸の図り方を反転
     errorCtx.translate(0, canvas.height); // 原点を左下に移動
     errorCtx.scale(1, -1); // 上記に伴いY軸の図り方を反転
+    selectionCtx.translate(0, canvas.height); // 原点を左下に移動
+    selectionCtx.scale(1, -1); // 上記に伴いY軸の図り方を反転
   }
 
   function zoom() {
@@ -855,16 +863,48 @@
   selectHandler = {
     enable: false,
     transparent: false,
-    x: 0,
-    y: 0,
-    w: 0,
-    h: 0,
+    start_x: 0, // 最初に選んだグリッド
+    start_y: 0, // 最初に選んだグリッド
+    end_x: 0, // 最後に選んだグリッド
+    end_y: 0, // 最後に選んだグリッド
+    left_bottom_x: 0, // 範囲選択の左下グリッド
+    left_bottom_y: 0, // 範囲選択の左下グリッド
+    w: 0, // 範囲選択の高さグリッド数
+    h: 0, // 範囲選択の左下グリッド数
+    target: '',
     down: function (x, y) {
-      let s = option.scale;
-      this.x = x * s;
-      this.y = y * s;
-      this.w = ctx.canvas.width;
-      this.h = ctx.canvas.height;
+      this.start_x = x;
+      this.start_y = y;
+      this.w = 1;
+      this.h = 1;
+
+      // 最初に選択(down)した場所が組織図、紋栓図、引込図のどれかを判断
+      // ドラッグ(move)した際に組織図、紋栓図、引込図の範囲を超えさせないために必要
+      if (
+        orimonoData.soshiki_min_x <= x &&
+        orimonoData.soshiki_max_x >= x &&
+        orimonoData.soshiki_min_y <= y &&
+        orimonoData.soshiki_max_y >= y
+      ) {
+        this.type = 'soshiki';
+      } else if (
+        orimonoData.monsen_min_x <= x &&
+        orimonoData.monsen_max_x >= x &&
+        orimonoData.monsen_min_y <= y &&
+        orimonoData.monsen_max_y >= y
+      ) {
+        this.type = 'monsen';
+      } else if (
+        orimonoData.hikikomi_min_x <= x &&
+        orimonoData.hikikomi_max_x >= x &&
+        orimonoData.hikikomi_min_y <= y &&
+        orimonoData.hikikomi_max_y >= y
+      ) {
+        this.type = 'hikikomi';
+      } else {
+        this.type = 'other';
+        return;
+      }
 
       if (this.enable) {
         deselect();
@@ -878,68 +918,90 @@
         selectionCtx.canvas.height
       );
 
-      $.position($selection, this.x, this.y);
       $.hide($selection);
+      $.position(
+        $selection,
+        this.start_x * option.scale,
+        this.start_y * option.scale
+      );
+      $.size($selection, this.w * option.scale, this.h * option.scale);
+      $.show($selection);
       selectionCtx.canvas.classList.remove('active');
     },
     move: function (x, y) {
-      let s = option.scale,
-        sx = this.x,
-        sy = this.y;
-
-      x = x * s;
-      y = y * s;
-
-      x = x < 0 ? 0 : x >= this.w ? this.w : x;
-      y = y < 0 ? 0 : y >= this.h ? this.h : y;
-
-      let w = Math.abs(x - sx),
-        h = Math.abs(y - sy);
-
-      x = sx > x ? x : sx;
-      y = sy > y ? y : sy;
-
-      if (w === 0) w = s;
-      if (h === 0) h = s;
-
-      if (w > 0 && h > 0) {
-        $.position($selection, x, y);
-        $.size($selection, w, h);
-        $.show($selection);
+      // 組織図、紋栓図、引込図の範囲を超えないようにする
+      if (this.type == 'soshiki') {
+        this.end_x =
+          x < orimonoData.soshiki_min_x
+            ? orimonoData.soshiki_min_x
+            : x > orimonoData.soshiki_max_x
+            ? orimonoData.soshiki_max_x
+            : x;
+        this.end_y =
+          y < orimonoData.soshiki_min_y
+            ? orimonoData.soshiki_min_y
+            : y > orimonoData.soshiki_max_y
+            ? orimonoData.soshiki_max_y
+            : y;
+      } else if (this.type == 'monsen') {
+        this.end_x =
+          x < orimonoData.monsen_min_x
+            ? orimonoData.monsen_min_x
+            : x > orimonoData.monsen_max_x
+            ? orimonoData.monsen_max_x
+            : x;
+        this.end_y =
+          y < orimonoData.monsen_min_y
+            ? orimonoData.monsen_min_y
+            : y > orimonoData.monsen_max_y
+            ? orimonoData.monsen_max_y
+            : y;
+      } else if (this.type == 'hikikomi') {
+        this.end_x =
+          x < orimonoData.hikikomi_min_x
+            ? orimonoData.hikikomi_min_x
+            : x > orimonoData.hikikomi_max_x
+            ? orimonoData.hikikomi_max_x
+            : x;
+        this.end_y =
+          y < orimonoData.hikikomi_min_y
+            ? orimonoData.hikikomi_min_y
+            : y > orimonoData.hikikomi_max_y
+            ? orimonoData.hikikomi_max_y
+            : y;
+      } else {
+        return;
       }
+
+      this.w = Math.abs(this.end_x - this.start_x) + 1;
+      this.h = Math.abs(this.end_y - this.start_y) + 1;
+
+      this.left_bottom_x =
+        this.end_x < this.start_x ? this.end_x : this.start_x;
+      this.left_bottom_y =
+        this.end_y < this.start_y ? this.end_y : this.start_y;
+
+      $.position(
+        $selection,
+        this.left_bottom_x * option.scale,
+        this.left_bottom_y * option.scale
+      );
+      $.size($selection, this.w * option.scale, this.h * option.scale);
+      $.show($selection);
     },
-    up: function (x, y, px, py) {
-      let s = option.scale,
-        r = selection.region,
-        sx = this.x,
-        sy = this.y;
-
-      x = x * s;
-      y = y * s;
-
-      x = x < 0 ? 0 : x >= this.w ? this.w : x;
-      y = y < 0 ? 0 : y >= this.h ? this.h : y;
-
-      let w = Math.abs(x - sx),
-        h = Math.abs(y - sy);
-
-      if (w === 0) w = s;
-      if (h === 0) h = s;
-
-      x = this.x > x ? x : this.x;
-      y = this.y > y ? y : this.y;
-
-      r.x = (x / s) ^ 0;
-      r.y = (y / s) ^ 0;
-      r.w = (w / s) ^ 0;
-      r.h = (h / s) ^ 0;
-
-      if (w > 0 && h > 0) {
-        selectionCtx.canvas.width = w;
-        selectionCtx.canvas.height = h;
-        $.size($selection, w, h);
-        $.show($selection);
-        cut(this.transparent);
+    up: function (x, y) {
+      console.log('up');
+      let r = selection.region;
+      r.x = this.scale_x;
+      r.y = this.scale_y;
+      r.w = this.scale_w;
+      r.h = this.scale_h;
+      if (this.w > 0 && this.h > 0) {
+        selectionCtx.canvas.width = this.scale_w;
+        selectionCtx.canvas.height = this.scale_h;
+        // $.size($selection, w, h);
+        // $.show($selection);
+        cut();
         this.enable = true;
         selection.transparent = this.transparent;
         selection.enable = true;
@@ -950,14 +1012,11 @@
 
   $.bind($('work'), 'mousedown', (e) => {
     let r = work.canvas.getBoundingClientRect();
-
     left = window.scrollX + r.left;
     top = window.scrollY + r.top;
-    let x = e.pageX - left,
-      y = work.canvas.height - (e.pageY - top), // Y軸は下から数えたいため
-      size = option.scale;
-    points[0] = (y / size) ^ 0;
-    points[1] = (x / size) ^ 0;
+    // mousedownのx,yはmoveやupでも使うのでpointsに保管する
+    points[0] = ((work.canvas.height - (e.pageY - top)) / option.scale) ^ 0;
+    points[1] = ((e.pageX - left) / option.scale) ^ 0;
 
     if (e.altKey) {
       // スポイト
@@ -1061,12 +1120,13 @@
 
   function mousemoveHandler(e) {
     if (down) {
-      let size = option.scale,
-        x = ((e.pageX - left) / size) ^ 0,
-        y = ((e.pageY - top) / size) ^ 0,
+      let r = work.canvas.getBoundingClientRect();
+      left = window.scrollX + r.left;
+      top = window.scrollY + r.top;
+      let x = ((e.pageX - left) / option.scale) ^ 0,
+        y = ((work.canvas.height - (e.pageY - top)) / option.scale) ^ 0, // Y軸は下から数えたいため
         w = work.canvas.width,
         h = work.canvas.height,
-        context = { palette: paletteIndex, option: option },
         dummy = { width: orimonoData.width, height: orimonoData.height };
       if (points[1] === x && points[0] === y) {
         return false;
@@ -1157,9 +1217,11 @@
     e.stopPropagation();
     if (e.button === 0 && down) {
       down = false;
-      let size = option.scale,
-        x = ((e.pageX - left) / size) ^ 0,
-        y = ((e.pageY - top) / size) ^ 0;
+      let r = work.canvas.getBoundingClientRect();
+      left = window.scrollX + r.left;
+      top = window.scrollY + r.top;
+      let x = ((e.pageX - left) / option.scale) ^ 0,
+        y = ((work.canvas.height - (e.pageY - top)) / option.scale) ^ 0; // Y軸は下から数えたいため
       work.clearRect(0, 0, work.canvas.width, work.canvas.height);
       // 実際のレイヤーに描画する
       if (tool === 'line') {
@@ -1218,7 +1280,7 @@
           option.scale
         );
       } else if (tool === 'select') {
-        selectHandler.up(x, y, points[1], points[0]);
+        selectHandler.up(x, y);
       }
       grid();
     }
@@ -1248,7 +1310,25 @@
         e.stopPropagation();
         let s = option.scale,
           x = (((e.pageX - offsetX + left) / s) ^ 0) * s,
-          y = (((e.pageY - offsetY + top) / s) ^ 0) * s;
+          y = (((work.canvas.height - e.pageY + top) / s) ^ 0) * s;
+        // let x2 = ((e.pageX - left) / option.scale) ^ 0,
+        //   y2 = ((work.canvas.height - (e.pageY - top)) / option.scale) ^ 0; // Y軸は下から数えたいため
+        console.log(
+          x +
+            ':' +
+            y +
+            ':canvas:' +
+            work.canvas.height +
+            ':e.pageY:' +
+            e.pageY +
+            ':offsetY:' +
+            offsetY +
+            ':top:' +
+            top
+        );
+        // console.log(left + ':' + top);
+        // console.log(e.pageX + ':' + (work.canvas.height - e.pageY));
+        // console.log(offsetX + ':' + offsetY);
         $.position($selection, x, y);
       }
       return false;
@@ -1274,7 +1354,9 @@
 
   $.bind($selection, 'mousedown', (e) => {
     left = e.target.offsetLeft;
-    top = e.target.offsetTop;
+    console.log('top:' + top);
+    // top = e.target.offsetTop;
+    console.log('top:' + top);
     down = true;
     offsetX = e.pageX;
     offsetY = e.pageY;
@@ -1646,50 +1728,15 @@
   }
 
   // 切り取り
-  function cut(transparent) {
+  function cut() {
     let s = option.scale,
       r = selection.region,
-      x = r.x * s,
-      y = r.y * s,
-      w = r.w * s,
-      h = r.h * s;
-
-    x = x < 0 ? 0 : x;
-    y = y < 0 ? 0 : y;
-
-    if (!transparent) {
-      selectionCtx.fillStyle = palette[Palette.getTransparentIndex()];
-      selectionCtx.fillRect(0, 0, w, h);
-    }
+      x = r.x,
+      y = r.y,
+      w = r.w,
+      h = r.h;
+    y = ctx.canvas.height - (r.y + r.h); // yは上からしか測れないdrawImage仕様のため。
     selectionCtx.drawImage(ctx.canvas, x, y, w, h, 0, 0, w, h);
-
-    ctx.fillStyle = palette[Palette.getTransparentIndex()];
-    ctx.fillRect(r.x * s, r.y * s, r.w * s, r.h * s);
-    selection.orimonoData.width = r.w;
-    selection.orimonoData.height = r.h;
-    copyorimonoData(orimonoData, selection.orimonoData, r.x, r.y, r.w, r.h);
-    fillorimonoData(
-      orimonoData,
-      Palette.getTransparentIndex(),
-      r.x,
-      r.y,
-      r.w,
-      r.h
-    );
-    //		drawOrimonoData(selectionCtx, selection.orimonoData, palette, option.scale);
-
-    //		if(option.gridOn && option.zoom > 2) {
-    //			drawGrid(selectionCtx, option, option.scale);
-    //		}
-    if (transparent) {
-      // 背景色を抜く
-      drawClearColor(
-        selectionCtx,
-        selection.orimonoData,
-        Palette.getTransparentIndex(),
-        option.scale
-      );
-    }
   }
 
   // 選択解除
@@ -1699,24 +1746,12 @@
     let s = option.scale,
       r = selection.region,
       x = r.x * s,
-      y = r.y * s,
-      transparentIndex = selection.transparent
-        ? Palette.getTransparentIndex()
-        : 256;
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.drawImage(selectionCtx.canvas, x, y);
-    copyorimonoData(
-      selection.orimonoData,
-      orimonoData,
-      0,
-      0,
-      r.w,
-      r.h,
-      r.x,
-      r.y,
-      transparentIndex
-    );
+      y = r.y * s;
+    // ctx.drawImage(selectionCtx.canvas, x, y);
     $.hide($selection);
+
+    // TODO selectionDataからorimonoDataにコピーする処理が必要
+    // その際に基本データから組織図への反映方法を検討する必要がある
 
     drawPreview();
   }

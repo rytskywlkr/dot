@@ -1,6 +1,7 @@
 #editor-canvas #selection {
-	left: 96px;
-	top: 12px;
+	left: 0px;
+	top: auto;
+	bottom: 0px;
 /*	display: none;*/
 /*	cursor: move;*/
 	background-color: rgba(0, 0, 0, 0.1);

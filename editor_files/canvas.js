@@ -1603,8 +1603,8 @@ function createOrimonoData(
   }
   let soshiki_min_x = waku_maisu + 1; // 空白の+1
   let soshiki_min_y = waku_maisu + 1; // 空白の+1
-  let soshiki_max_x = soshiki_min_x + soshiki_tate;
-  let soshiki_max_y = soshiki_min_y + soshiki_yoko;
+  let soshiki_max_x = soshiki_min_x + soshiki_tate - 1; // 0からカウントするのでｰ1しないと合わない
+  let soshiki_max_y = soshiki_min_y + soshiki_yoko - 1; // 0からカウントするのでｰ1しないと合わない
 
   // 紋栓データを生成する
   let monsen_data = [];
@@ -1613,8 +1613,8 @@ function createOrimonoData(
   }
   let monsen_min_x = 0;
   let monsen_min_y = waku_maisu + 1; // 空白の+1
-  let monsen_max_x = monsen_min_x + waku_maisu;
-  let monsen_max_y = monsen_min_y + soshiki_yoko;
+  let monsen_max_x = monsen_min_x + waku_maisu - 1; // 0からカウントするのでｰ1しないと合わない
+  let monsen_max_y = monsen_min_y + soshiki_yoko - 1; // 0からカウントするのでｰ1しないと合わない
 
   // 引込データを生成する
   let hikikomi_data = [];
@@ -1623,8 +1623,8 @@ function createOrimonoData(
   }
   let hikikomi_min_x = waku_maisu + 1; // 空白の+1
   let hikikomi_min_y = 0;
-  let hikikomi_max_x = hikikomi_min_x + soshiki_yoko;
-  let hikikomi_max_y = hikikomi_min_y + waku_maisu;
+  let hikikomi_max_x = hikikomi_min_x + soshiki_tate - 1; // 0からカウントするのでｰ1しないと合わない
+  let hikikomi_max_y = hikikomi_min_y + waku_maisu - 1; // 0からカウントするのでｰ1しないと合わない
   return {
     kihon_tate: kihon_tate,
     kihon_yoko: kihon_yoko,
