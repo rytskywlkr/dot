@@ -89,8 +89,9 @@
   const selection = {
     region: { x: 0, y: 0, w: 0, h: 0 },
     enable: false,
-    selectionData: null,
+    selectionData: [],
     transparent: false,
+    type: null,
   };
 
   // プレビュー画像を描画する
@@ -871,10 +872,11 @@
     left_bottom_y: 0, // 範囲選択の左下グリッド
     w: 0, // 範囲選択の高さグリッド数
     h: 0, // 範囲選択の左下グリッド数
-    target: '',
     down: function (x, y) {
       this.start_x = x;
       this.start_y = y;
+      this.left_bottom_x = x;
+      this.left_bottom_y = y;
       this.w = 1;
       this.h = 1;
 
@@ -886,23 +888,23 @@
         orimonoData.soshiki_min_y <= y &&
         orimonoData.soshiki_max_y >= y
       ) {
-        this.type = 'soshiki';
+        selection.type = 'soshiki';
       } else if (
         orimonoData.monsen_min_x <= x &&
         orimonoData.monsen_max_x >= x &&
         orimonoData.monsen_min_y <= y &&
         orimonoData.monsen_max_y >= y
       ) {
-        this.type = 'monsen';
+        selection.type = 'monsen';
       } else if (
         orimonoData.hikikomi_min_x <= x &&
         orimonoData.hikikomi_max_x >= x &&
         orimonoData.hikikomi_min_y <= y &&
         orimonoData.hikikomi_max_y >= y
       ) {
-        this.type = 'hikikomi';
+        selection.type = 'hikikomi';
       } else {
-        this.type = 'other';
+        selection.type = 'other';
         return;
       }
 
@@ -930,7 +932,7 @@
     },
     move: function (x, y) {
       // 組織図、紋栓図、引込図の範囲を超えないようにする
-      if (this.type == 'soshiki') {
+      if (selection.type == 'soshiki') {
         this.end_x =
           x < orimonoData.soshiki_min_x
             ? orimonoData.soshiki_min_x
@@ -943,7 +945,7 @@
             : y > orimonoData.soshiki_max_y
             ? orimonoData.soshiki_max_y
             : y;
-      } else if (this.type == 'monsen') {
+      } else if (selection.type == 'monsen') {
         this.end_x =
           x < orimonoData.monsen_min_x
             ? orimonoData.monsen_min_x
@@ -956,7 +958,7 @@
             : y > orimonoData.monsen_max_y
             ? orimonoData.monsen_max_y
             : y;
-      } else if (this.type == 'hikikomi') {
+      } else if (selection.type == 'hikikomi') {
         this.end_x =
           x < orimonoData.hikikomi_min_x
             ? orimonoData.hikikomi_min_x
@@ -976,11 +978,14 @@
       this.w = Math.abs(this.end_x - this.start_x) + 1;
       this.h = Math.abs(this.end_y - this.start_y) + 1;
 
+      // 最初に選んだグリッドと最後に選んだグリッドの小さい方を左下グリッドとする
+      // 左下から範囲選択エリアを描画するために必要
       this.left_bottom_x =
         this.end_x < this.start_x ? this.end_x : this.start_x;
       this.left_bottom_y =
         this.end_y < this.start_y ? this.end_y : this.start_y;
 
+      // 左下グリッドから高さと幅を範囲選択する
       $.position(
         $selection,
         this.left_bottom_x * option.scale,
@@ -990,23 +995,19 @@
       $.show($selection);
     },
     up: function (x, y) {
-      console.log('up');
       let r = selection.region;
-      r.x = this.scale_x;
-      r.y = this.scale_y;
-      r.w = this.scale_w;
-      r.h = this.scale_h;
-      if (this.w > 0 && this.h > 0) {
-        selectionCtx.canvas.width = this.scale_w;
-        selectionCtx.canvas.height = this.scale_h;
-        // $.size($selection, w, h);
-        // $.show($selection);
-        cut();
-        this.enable = true;
-        selection.transparent = this.transparent;
-        selection.enable = true;
-        selectionCtx.canvas.classList.add('active');
-      }
+      r.x = this.left_bottom_x;
+      r.y = this.left_bottom_y;
+      r.w = this.w;
+      r.h = this.h;
+
+      $.size($selection, this.w * option.scale, this.h * option.scale);
+      $.show($selection);
+      cut();
+      this.enable = true;
+      selection.transparent = this.transparent;
+      selection.enable = true;
+      selectionCtx.canvas.classList.add('active');
     },
   };
 
@@ -1729,13 +1730,35 @@
 
   // 切り取り
   function cut() {
+    console.log(selection);
     let s = option.scale,
       r = selection.region,
-      x = r.x,
-      y = r.y,
-      w = r.w,
-      h = r.h;
-    y = ctx.canvas.height - (r.y + r.h); // yは上からしか測れないdrawImage仕様のため。
+      x = r.x * s,
+      y = r.y * s,
+      w = r.w * s,
+      h = r.h * s;
+    y = ctx.canvas.height - (y + h); // yは上からしか測れないdrawImage仕様のため。
+
+    selection.selectionData = new Array(r.w);
+    console.log(orimonoData);
+    for (let i = 0; i < r.w; i++) {
+      selection.selectionData[i] = new Uint8Array(r.h);
+      for (let j = 0; j < r.h; j++) {
+        if (selection.type == 'soshiki') {
+          selection.selectionData[i][j] = orimonoData.soshiki_data[i][j];
+        } else if (selection.type == 'monsen') {
+          selection.selectionData[i][j] = orimonoData.monsen_data[i][j];
+        } else if (selection.type == 'hikikomi') {
+          selection.selectionData[i][j] = orimonoData.hikikomi_data[i][j];
+        }
+      }
+    }
+    console.log(selection.selectionData);
+
+    // 確定した範囲選択の高さと幅を指定する
+    //ctxからselectionCtxの画像を作るために必要
+    selectionCtx.canvas.width = w;
+    selectionCtx.canvas.height = h;
     selectionCtx.drawImage(ctx.canvas, x, y, w, h, 0, 0, w, h);
   }
 

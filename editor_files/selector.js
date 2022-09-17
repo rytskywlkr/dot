@@ -29,13 +29,13 @@
   };
 
   $.position = (e, x, y) => {
-    e.style.left = x + 1 + 'px';
+    e.style.left = x + 'px';
     e.style.bottom = y + 'px';
   };
 
   $.size = (e, w, h) => {
-    e.style.width = w - 1 + 'px';
-    e.style.height = h - 1 + 'px';
+    e.style.width = w + 'px';
+    e.style.height = h + 'px';
   };
 
   $.bind = (e, event, func) => {
