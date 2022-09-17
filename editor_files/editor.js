@@ -1372,186 +1372,7 @@
     $templateLayer = $('layer-list-template'),
     $currentLayer = $layerList.lastElementChild;
 
-  $.bind($('layer-list'), 'click', (e) => {
-    const target = e.target.parentNode;
-    if ($currentLayer === target) {
-      return;
-    }
-    if (target.localName === 'li') {
-      if ($currentLayer) {
-        $currentLayer.classList.remove('selected');
-      }
-      $currentLayer = target;
-      $currentLayer.classList.add('selected');
-      let id = $currentLayer.getAttribute('data-canvas-id');
-      if (id) {
-        const layer = Layer.find(id);
-        orimonoData = layer.orimonoData;
-        ctx = layer.ctx;
-        drawPreview();
-      }
-    }
-  });
-
-  $.bind($('layer-list'), 'focusout', (e) => {
-    const target = e.target;
-    if (target.localName === 'div') {
-      target.setAttribute('contenteditable', false);
-    }
-  });
-
-  $.bind($('layer-list'), 'dblclick', (e) => {
-    const target = e.target;
-    if (target.localName === 'div') {
-      target.setAttribute('contenteditable', true);
-    }
-  });
-
-  $.bind($layerList, 'change', (e) => {
-    let id = e.target.parentNode.parentNode.getAttribute('data-canvas-id');
-    if (id) {
-      $(id).style.display = e.target.checked ? 'block' : 'none';
-      let layer = Layer.find(id);
-      layer.visibility = !layer.visibility;
-    }
-  });
-
-  function addLayer(width, height) {
-    let item = $templateLayer.cloneNode(true);
-
-    $layerList.insertBefore(item, $layerList.firstElementChild);
-    let layer = Layer.add(width, height);
-    layer.canvas.width = canvas.width;
-    layer.canvas.height = canvas.height;
-    item.removeAttribute('id');
-    item.setAttribute('data-canvas-id', layer.canvas.id);
-    item.lastChild.textContent = 'レイヤー' + (layer.index + 1);
-    $('editor-canvas').appendChild(layer.canvas);
-
-    return layer;
-  }
-
-  $.bind($('layer-add'), 'click', () => {
-    if ($layerList.childElementCount <= 8) {
-      addLayer(orimonoData.width, orimonoData.height);
-    }
-  });
-
-  $.bind($('layer-remove'), 'click', () => {
-    if ($layerList.childElementCount > 1) {
-      if ($currentLayer) {
-        let removeLayer = $currentLayer,
-          id = removeLayer.getAttribute('data-canvas-id');
-
-        if (id) {
-          Layer.remove(id);
-          $('editor-canvas').removeChild($(id));
-        }
-
-        if ($currentLayer.nextElementSibling) {
-          $currentLayer = $currentLayer.nextElementSibling;
-        } else {
-          $currentLayer = $currentLayer.previousElementSibling;
-        }
-        $currentLayer.classList.add('selected');
-        $layerList.removeChild(removeLayer);
-
-        id = $currentLayer.getAttribute('data-canvas-id');
-        if (id) {
-          const layer = Layer.find(id);
-          orimonoData = layer.orimonoData;
-          ctx = layer.ctx;
-          drawPreview();
-        }
-      }
-    }
-  });
-
-  $.bind($('layer-up'), 'click', () => {
-    if ($currentLayer && $currentLayer.previousElementSibling) {
-      let id = $currentLayer.getAttribute('data-canvas-id');
-      if (id) {
-        Layer.up(id);
-      }
-      $layerList.insertBefore(
-        $currentLayer,
-        $currentLayer.previousElementSibling
-      );
-    }
-  });
-
-  $.bind($('layer-down'), 'click', () => {
-    if ($currentLayer && $currentLayer.nextElementSibling) {
-      let id = $currentLayer.getAttribute('data-canvas-id');
-      if (id) {
-        Layer.down(id);
-      }
-      $layerList.insertBefore(
-        $currentLayer,
-        $currentLayer.nextElementSibling.nextElementSibling
-      );
-    }
-  });
-
-  $.bind($('layer-merge'), 'click', () => {
-    if ($currentLayer && $currentLayer.nextElementSibling) {
-      let removeLayer = $currentLayer,
-        removeId = removeLayer.getAttribute('data-canvas-id');
-
-      if (removeId) {
-        const layer = Layer.find(removeId);
-
-        $('editor-canvas').removeChild($(removeId));
-
-        if ($currentLayer.nextElementSibling) {
-          $currentLayer = $currentLayer.nextElementSibling;
-        } else {
-          $currentLayer = $currentLayer.previousElementSibling;
-        }
-        $currentLayer.classList.add('selected');
-
-        let id = $currentLayer.getAttribute('data-canvas-id');
-        const baseLayer = Layer.find(id);
-
-        baseLayer.ctx.drawImage(layer.canvas, 0, 0);
-        mergeorimonoData(
-          layer.orimonoData,
-          baseLayer.orimonoData,
-          Palette.getTransparentIndex()
-        );
-
-        $layerList.removeChild(removeLayer);
-
-        orimonoData = baseLayer.orimonoData;
-        ctx = baseLayer.ctx;
-
-        Layer.merge(removeId);
-
-        drawPreview();
-      }
-    }
-  });
-
-  // レイヤーを1つ残して削除する
-  function clearLayer() {
-    let baseLayer = Layer.get(0);
-    ctx = baseLayer.ctx;
-    orimonoData = baseLayer.orimonoData;
-    for (let i = 1; i < Layer.count(); i++) {
-      let layer = Layer.get(i);
-      $('editor-canvas').removeChild(layer.canvas);
-    }
-
-    for (let i = $layerList.childElementCount - 2; i >= 0; i--) {
-      $layerList.removeChild($layerList.children[i]);
-    }
-    $currentLayer = $layerList.children[0];
-    $currentLayer.classList.add('selected');
-    $currentLayer.setAttribute('data-canvas-id', baseLayer.canvas.id);
-    Layer.clear();
-    return Layer.set(ctx, ctx.canvas, orimonoData);
-  }
-
+  // TODO vscodeのauto reloadと相性が悪いので一時的にコメントアウト
   // window.onbeforeunload = () => {
   // 	return 'ページを移動すると編集した情報が失われます';
   // };
@@ -1730,7 +1551,6 @@
 
   // 切り取り
   function cut() {
-    console.log(selection);
     let s = option.scale,
       r = selection.region,
       x = r.x * s,
@@ -1753,7 +1573,6 @@
         }
       }
     }
-    console.log(selection.selectionData);
 
     // 確定した範囲選択の高さと幅を指定する
     //ctxからselectionCtxの画像を作るために必要
