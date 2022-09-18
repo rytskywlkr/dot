@@ -73,9 +73,9 @@ function drawSelectionRegion(ctx, x0, y0, x1, y1, scale) {
 function drawDotOrimono(ctx, x, y, orimonoData, paletteIndex, option) {
   if (
     orimonoData.soshiki_min_x <= x &&
-    x < orimonoData.soshiki_max_x &&
+    x <= orimonoData.soshiki_max_x &&
     orimonoData.soshiki_min_y <= y &&
-    y < orimonoData.soshiki_max_y
+    y <= orimonoData.soshiki_max_y
   ) {
     // 組織図にドットを描画する
     // 組織図の場合は1つのドットではなく、基本サイズ毎の同じ座標にドットを描画する必要がある
@@ -108,9 +108,9 @@ function drawDotOrimono(ctx, x, y, orimonoData, paletteIndex, option) {
     }
   } else if (
     orimonoData.monsen_min_x <= x &&
-    x < orimonoData.monsen_max_x &&
+    x <= orimonoData.monsen_max_x &&
     orimonoData.monsen_min_y <= y &&
-    y < orimonoData.monsen_max_y
+    y <= orimonoData.monsen_max_y
   ) {
     // 紋栓図にドットを描画する
     // 紋栓図の場合は1つのドットを描画するだけ
@@ -120,13 +120,13 @@ function drawDotOrimono(ctx, x, y, orimonoData, paletteIndex, option) {
     ] = paletteIndex;
   } else if (
     orimonoData.hikikomi_min_x <= x &&
-    x < orimonoData.hikikomi_max_x &&
+    x <= orimonoData.hikikomi_max_x &&
     orimonoData.hikikomi_min_y <= y &&
-    y < orimonoData.hikikomi_max_y
+    y <= orimonoData.hikikomi_max_y
   ) {
     // 引込図にドットを描画する
     // 引込図の場合は1列に1ドットと決まっているので、列のドットをクリアしてからドットを描画する
-    for (let i = 0; i < orimonoData.hikikomi_max_y; i++) {
+    for (let i = 0; i <= orimonoData.hikikomi_max_y; i++) {
       clearDot(ctx, x, i, option.scale);
       orimonoData.hikikomi_data[x - orimonoData.hikikomi_min_x][i] = 0;
     }
@@ -144,9 +144,9 @@ function clearDotOrimono(ctx, x, y, orimonoData, option, padding = 1) {
     b = s - padding;
   if (
     orimonoData.soshiki_min_x <= x &&
-    x < orimonoData.soshiki_max_x &&
+    x <= orimonoData.soshiki_max_x &&
     orimonoData.soshiki_min_y <= y &&
-    y < orimonoData.soshiki_max_y
+    y <= orimonoData.soshiki_max_y
   ) {
     orimonoData.soshiki_data[x - orimonoData.soshiki_min_x][
       y - orimonoData.soshiki_min_y
@@ -175,9 +175,9 @@ function clearDotOrimono(ctx, x, y, orimonoData, option, padding = 1) {
     }
   } else if (
     orimonoData.monsen_min_x <= x &&
-    x < orimonoData.monsen_max_x &&
+    x <= orimonoData.monsen_max_x &&
     orimonoData.monsen_min_y <= y &&
-    y < orimonoData.monsen_max_y
+    y <= orimonoData.monsen_max_y
   ) {
     clearDot(ctx, x, y, option.scale);
     orimonoData.monsen_data[x - orimonoData.monsen_min_x][
@@ -185,9 +185,9 @@ function clearDotOrimono(ctx, x, y, orimonoData, option, padding = 1) {
     ] = 0;
   } else if (
     orimonoData.hikikomi_min_x <= x &&
-    x < orimonoData.hikikomi_max_x &&
+    x <= orimonoData.hikikomi_max_x &&
     orimonoData.hikikomi_min_y <= y &&
-    y < orimonoData.hikikomi_max_y
+    y <= orimonoData.hikikomi_max_y
   ) {
     clearDot(ctx, x, y, option.scale);
     orimonoData.hikikomi_data[x - orimonoData.hikikomi_min_x][

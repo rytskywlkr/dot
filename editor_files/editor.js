@@ -995,6 +995,7 @@
       $.show($selection);
     },
     up: function (x, y) {
+      console.log('up2');
       let r = selection.region;
       r.x = this.left_bottom_x;
       r.y = this.left_bottom_y;
@@ -1090,10 +1091,6 @@
           break;
         case 'select':
         case 'move':
-          //				if(option.selection.enable && rectIn(option.selection.region, x, y)) {
-          //					tool = 'move';
-          //				}
-          //				down = true;
           selectHandler.transparent = e.ctrlKey;
           selectHandler.down(points[1], points[0]);
           down = true;
@@ -1310,27 +1307,55 @@
         e.preventDefault();
         e.stopPropagation();
         let s = option.scale,
-          x = (((e.pageX - offsetX + left) / s) ^ 0) * s,
-          y = (((work.canvas.height - e.pageY + top) / s) ^ 0) * s;
-        // let x2 = ((e.pageX - left) / option.scale) ^ 0,
-        //   y2 = ((work.canvas.height - (e.pageY - top)) / option.scale) ^ 0; // Y軸は下から数えたいため
-        console.log(
-          x +
-            ':' +
-            y +
-            ':canvas:' +
-            work.canvas.height +
-            ':e.pageY:' +
-            e.pageY +
-            ':offsetY:' +
-            offsetY +
-            ':top:' +
-            top
-        );
-        // console.log(left + ':' + top);
-        // console.log(e.pageX + ':' + (work.canvas.height - e.pageY));
-        // console.log(offsetX + ':' + offsetY);
-        $.position($selection, x, y);
+          x = ((e.pageX - offsetX + left) / s) ^ 0,
+          y = ((work.canvas.height - e.pageY + top) / s) ^ 0;
+        if (selection.type == 'soshiki') {
+          // 組織図の範囲を超えないように制御する
+          x =
+            x < orimonoData.soshiki_min_x
+              ? orimonoData.soshiki_min_x
+              : x + selection.region.w > orimonoData.soshiki_max_x
+              ? orimonoData.soshiki_max_x - selection.region.w + 1
+              : x;
+          y =
+            y < orimonoData.soshiki_min_y
+              ? orimonoData.soshiki_min_y
+              : y + selection.region.h > orimonoData.soshiki_max_y
+              ? orimonoData.soshiki_max_y - selection.region.h + 1
+              : y;
+        } else if (selection.type == 'monsen') {
+          x =
+            x < orimonoData.monsen_min_x
+              ? orimonoData.monsen_min_x
+              : x + selection.region.w > orimonoData.monsen_max_x
+              ? orimonoData.monsen_max_x - selection.region.w + 1
+              : x;
+          y =
+            y < orimonoData.monsen_min_y
+              ? orimonoData.monsen_min_y
+              : y + selection.region.h > orimonoData.monsen_max_y
+              ? orimonoData.monsen_max_y - selection.region.h + 1
+              : y;
+        } else if (selection.type == 'hikikomi') {
+          x =
+            x < orimonoData.hikikomi_min_x
+              ? orimonoData.hikikomi_min_x
+              : x + selection.region.w > orimonoData.hikikomi_max_x
+              ? orimonoData.hikikomi_max_x - selection.region.w + 1
+              : x;
+          y =
+            y < orimonoData.hikikomi_min_y
+              ? orimonoData.hikikomi_min_y
+              : y + selection.region.h > orimonoData.hikikomi_max_y
+              ? orimonoData.hikikomi_max_y - selection.region.h + 1
+              : y;
+        } else {
+          return;
+        }
+        console.log('move:' + x + ':' + y);
+        selection.region.x = x;
+        selection.region.y = y;
+        $.position($selection, x * s, y * s);
       }
       return false;
     },
@@ -1338,12 +1363,6 @@
       if (down) {
         e.preventDefault();
         e.stopPropagation();
-        let s = option.scale,
-          x = ((e.pageX - offsetX + left) / s) ^ 0,
-          y = ((e.pageY - offsetY + top) / s) ^ 0;
-
-        selection.region.x = x;
-        selection.region.y = y;
 
         $.unbind('mouseup', moveHandler.up);
         $.unbind('mousemove', moveHandler.move);
@@ -1560,16 +1579,24 @@
     y = ctx.canvas.height - (y + h); // yは上からしか測れないdrawImage仕様のため。
 
     selection.selectionData = new Array(r.w);
-    console.log(orimonoData);
     for (let i = 0; i < r.w; i++) {
       selection.selectionData[i] = new Uint8Array(r.h);
       for (let j = 0; j < r.h; j++) {
         if (selection.type == 'soshiki') {
-          selection.selectionData[i][j] = orimonoData.soshiki_data[i][j];
+          selection.selectionData[i][j] =
+            orimonoData.soshiki_data[
+              i + selection.region.x - orimonoData.soshiki_min_x
+            ][j + selection.region.y - orimonoData.soshiki_min_y];
         } else if (selection.type == 'monsen') {
-          selection.selectionData[i][j] = orimonoData.monsen_data[i][j];
+          selection.selectionData[i][j] =
+            orimonoData.monsen_data[
+              i + selection.region.x - orimonoData.monsen_min_x
+            ][j + selection.region.y - orimonoData.monsen_min_y];
         } else if (selection.type == 'hikikomi') {
-          selection.selectionData[i][j] = orimonoData.hikikomi_data[i][j];
+          selection.selectionData[i][j] =
+            orimonoData.hikikomi_data[
+              i + selection.region.x - orimonoData.hikikomi_min_x
+            ][j + selection.region.y - orimonoData.hikikomi_min_y];
         }
       }
     }
@@ -1585,16 +1612,60 @@
   function deselect() {
     if (!selection.enable) return;
     selection.enable = false;
-    let s = option.scale,
-      r = selection.region,
-      x = r.x * s,
-      y = r.y * s;
-    // ctx.drawImage(selectionCtx.canvas, x, y);
     $.hide($selection);
 
-    // TODO selectionDataからorimonoDataにコピーする処理が必要
-    // その際に基本データから組織図への反映方法を検討する必要がある
-
+    console.log(selection);
+    console.log(orimonoData.soshiki_data);
+    if (selection.type == 'soshiki') {
+      for (let i = 0; i < selection.selectionData.length; i++) {
+        for (let j = 0; j < selection.selectionData[i].length; j++) {
+          console.log(
+            'value:' +
+              selection.selectionData[i][j] +
+              'x:' +
+              (i + selection.region.x - orimonoData.soshiki_min_x) +
+              ':y:' +
+              (j + selection.region.y - orimonoData.soshiki_min_y) +
+              ':r.x:' +
+              selection.region.x +
+              ':r.y:' +
+              selection.region.y +
+              ':m.x:' +
+              orimonoData.soshiki_min_x +
+              ':m.y:' +
+              orimonoData.soshiki_min_y +
+              ':i:' +
+              i +
+              ':j:' +
+              j
+          );
+          orimonoData.soshiki_data[
+            i + selection.region.x - orimonoData.soshiki_min_x
+          ][j + selection.region.y - orimonoData.soshiki_min_y] =
+            selection.selectionData[i][j];
+        }
+      }
+    } else if (selection.type == 'monsen') {
+      for (let i = 0; i < selection.selectionData.length; i++) {
+        for (let j = 0; j < selection.selectionData[i].length; j++) {
+          orimonoData.monsen_data[
+            i + selection.region.x - orimonoData.monsen_min_x
+          ][j + selection.region.y - orimonoData.monsen_min_y] =
+            selection.selectionData[i][j];
+        }
+      }
+    } else if (selection.type == 'hikikomi') {
+      for (let i = 0; i < selection.selectionData.length; i++) {
+        for (let j = 0; j < selection.selectionData[i].length; j++) {
+          orimonoData.hikikomi_data[
+            i + selection.region.x - orimonoData.hikikomi_min_x
+          ][j + selection.region.y - orimonoData.hikikomi_min_y] =
+            selection.selectionData[i][j];
+        }
+      }
+    }
+    drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
+    console.log(orimonoData.soshiki_data);
     drawPreview();
   }
 
