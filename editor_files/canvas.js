@@ -4,19 +4,8 @@
 
 'use strict';
 
-// キャンバスとインデックスデータを消去する
-function clear(ctx, indexData) {
-  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  if (indexData) {
-    let data = indexData.data;
-    for (let i = 0, n = data.length; i < n; i++) {
-      data[i] = 0;
-    }
-  }
-}
-
 // キャンバスを消去する
-function clear(ctx) {
+function clearCanvas(ctx) {
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 }
 // 破線の描画
@@ -996,6 +985,8 @@ function drawOrimonoData(
   paletteData,
   transparent
 ) {
+  // 最初にキャンバスをクリアしておく
+  clearCanvas(ctx);
   // 組織図を描画
   for (let x = 0; x < orimonoData.soshiki_tate; x++) {
     for (let y = 0; y < orimonoData.soshiki_yoko; y++) {

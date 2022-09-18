@@ -448,6 +448,7 @@
   $.bind($('fellipse'), 'click', toggleTool('fellipse'));
   $.bind($('select'), 'click', toggleTool('select'));
   $.bind($('copy'), 'click', paste);
+  $.bind($('clear'), 'click', clear);
   $.bind($('flipv'), 'click', flipVert);
   $.bind($('fliph'), 'click', flipHorz);
   $.bind($('rotater'), 'click', rotateRight);
@@ -508,7 +509,7 @@
 
   $.bind($('monnsenhikikomi'), 'click', () => {
     // エラーをリセット
-    clear(errorCtx);
+    clearCanvas(errorCtx);
     // 空の紋栓データを生成する
     let new_monsen_data = [];
     for (let i = 0; i < orimonoData.waku_maisu; i++) {
@@ -606,7 +607,7 @@
 
   $.bind($('monsen'), 'click', () => {
     // エラーをリセット
-    clear(errorCtx);
+    clearCanvas(errorCtx);
 
     // 空の紋栓データを生成する
     let new_monsen_data = [];
@@ -659,7 +660,7 @@
 
   $.bind($('hikikomi'), 'click', () => {
     // エラーをリセット
-    clear(errorCtx);
+    clearCanvas(errorCtx);
 
     // 空の引込データを生成する
     let new_hikikomi_data = [];
@@ -693,7 +694,7 @@
 
   $.bind($('soshiki'), 'click', () => {
     // エラーをリセット
-    clear(errorCtx);
+    clearCanvas(errorCtx);
 
     for (let i = 0; i < orimonoData.soshiki_tate; i++) {
       let monsen_count = orimonoData.hikikomi_data[i].findIndex((element) => {
@@ -882,31 +883,7 @@
 
       // 最初に選択(down)した場所が組織図、紋栓図、引込図のどれかを判断
       // ドラッグ(move)した際に組織図、紋栓図、引込図の範囲を超えさせないために必要
-      if (
-        orimonoData.soshiki_min_x <= x &&
-        orimonoData.soshiki_max_x >= x &&
-        orimonoData.soshiki_min_y <= y &&
-        orimonoData.soshiki_max_y >= y
-      ) {
-        selection.type = 'soshiki';
-      } else if (
-        orimonoData.monsen_min_x <= x &&
-        orimonoData.monsen_max_x >= x &&
-        orimonoData.monsen_min_y <= y &&
-        orimonoData.monsen_max_y >= y
-      ) {
-        selection.type = 'monsen';
-      } else if (
-        orimonoData.hikikomi_min_x <= x &&
-        orimonoData.hikikomi_max_x >= x &&
-        orimonoData.hikikomi_min_y <= y &&
-        orimonoData.hikikomi_max_y >= y
-      ) {
-        selection.type = 'hikikomi';
-      } else {
-        selection.type = 'other';
-        return;
-      }
+      selection.type = getArea(x, y);
 
       if (this.enable) {
         deselect();
@@ -1550,7 +1527,7 @@
     if (temp) {
       pushRecord(redoData);
       orimonoData = copyOrimonoData(temp);
-      clear(ctx);
+      clearCanvas(ctx);
       drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
       drawPreview();
     }
@@ -1614,31 +1591,9 @@
     selection.enable = false;
     $.hide($selection);
 
-    console.log(selection);
-    console.log(orimonoData.soshiki_data);
     if (selection.type == 'soshiki') {
       for (let i = 0; i < selection.selectionData.length; i++) {
         for (let j = 0; j < selection.selectionData[i].length; j++) {
-          console.log(
-            'value:' +
-              selection.selectionData[i][j] +
-              'x:' +
-              (i + selection.region.x - orimonoData.soshiki_min_x) +
-              ':y:' +
-              (j + selection.region.y - orimonoData.soshiki_min_y) +
-              ':r.x:' +
-              selection.region.x +
-              ':r.y:' +
-              selection.region.y +
-              ':m.x:' +
-              orimonoData.soshiki_min_x +
-              ':m.y:' +
-              orimonoData.soshiki_min_y +
-              ':i:' +
-              i +
-              ':j:' +
-              j
-          );
           orimonoData.soshiki_data[
             i + selection.region.x - orimonoData.soshiki_min_x
           ][j + selection.region.y - orimonoData.soshiki_min_y] =
@@ -1664,8 +1619,8 @@
         }
       }
     }
+    console.log(orimonoData);
     drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
-    console.log(orimonoData.soshiki_data);
     drawPreview();
   }
 
@@ -1679,6 +1634,45 @@
     selection.region.y = 0;
     $.show($selection);
     selection.enable = true;
+  }
+
+  // クリア
+  function clear() {
+    if (!selection.enable) return;
+    for (let i = 0; i < selection.selectionData.length; i++) {
+      for (let j = 0; j < selection.selectionData[i].length; j++) {
+        selection.selectionData[i][j] = 0;
+      }
+    }
+    deselect();
+  }
+
+  // 組織図、紋栓図、引込図、それ以外かを判定する
+  function getArea(x, y) {
+    if (
+      orimonoData.soshiki_min_x <= x &&
+      orimonoData.soshiki_max_x >= x &&
+      orimonoData.soshiki_min_y <= y &&
+      orimonoData.soshiki_max_y >= y
+    ) {
+      return 'soshiki';
+    } else if (
+      orimonoData.monsen_min_x <= x &&
+      orimonoData.monsen_max_x >= x &&
+      orimonoData.monsen_min_y <= y &&
+      orimonoData.monsen_max_y >= y
+    ) {
+      return 'monsen';
+    } else if (
+      orimonoData.hikikomi_min_x <= x &&
+      orimonoData.hikikomi_max_x >= x &&
+      orimonoData.hikikomi_min_y <= y &&
+      orimonoData.hikikomi_max_y >= y
+    ) {
+      return 'hikikomi';
+    } else {
+      return 'other';
+    }
   }
 
   // 画面更新
