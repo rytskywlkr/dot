@@ -96,8 +96,8 @@
 
   // プレビュー画像を描画する
   function drawPreview() {
-    preview.canvas.width = getCanvasWidth();
-    preview.canvas.height = getCanvasHeight();
+    preview.canvas.width = 84;
+    preview.canvas.height = 84;
     Palette.convert(paletteData);
     // TODOプレビューはちゃんと作り込みが必要
     // drawOrimonoData(preview, orimonoData, paletteData, 1);
@@ -391,7 +391,6 @@
     new Widget('palette');
     new Widget('color-picker');
     new Widget('view');
-    new Widget('layers');
     preview = $('view').lastElementChild.getContext('2d');
   }
 
@@ -405,7 +404,6 @@
 
   $.position($('palette'), left + 420, top + 4);
   $.position($('view'), left + 420, top + 300);
-  $.position($('layers'), left + 420, top + 380);
   $.show($('overlay'));
 
   // ローカルファイルの読み込み

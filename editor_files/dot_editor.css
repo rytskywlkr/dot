@@ -1,9 +1,10 @@
 #container {
-	width: 800px;
+	width: auto;
 }
 
 #editor {
-	background-image: url("../images/background.png");
+	padding-top: 80px;
+	padding-left: 20px;
 	width: 100%;
 	height: 512px;
 }
@@ -168,11 +169,13 @@
 
 #new-image {
 	position: absolute;
-	top: 25%;
-	left: 25%;
+	padding: 16px;
+	top: 50%;
+	left: 50%;
 	z-index: 255;
-	margin-top: -120px;
-	margin-left: -120px;
+  transform: translate(-50%, -50%);
+  -webkit-transform: translate(-50%, -50%);
+  -ms-transform: translate(-50%, -50%);
 	text-align: center;
 }
 
@@ -338,10 +341,13 @@
 --------------------------------------------------------------------------*/
 
 .editor-tools {
+	position:fixed;
 	background-color: #FFF;
-	height: 34px;
+	height: 60px;
+	width: 100%;
 	font-size: 9pt;
-/*	border: 1px solid #AAA;*/
+	z-index: 50;
+	border: 1px solid #AAA;
 }
 
 .editor-tools ul {
@@ -394,7 +400,7 @@
 .editor-tools li p {
 	font-size: 9pt;
 	visibility: hidden;
-	margin-top: -30px;
+	margin-top: 30px;
 	margin-left: -8px;
 	background-color: #FFF;
 	border: 1px solid #AAA;

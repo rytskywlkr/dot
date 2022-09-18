@@ -6,12 +6,11 @@
 
 #palette p, .widget p {
 	text-align: center;
-	font-size: 9pt;
-	color: #FFF;
-	background-color: #08D;
+	font-size: 12pt;
+	font-weight: 500;
+	color: #8e8e8e;
 	cursor: move;
 	position: relative;
-	border-radius: 3px;
 	letter-spacing: 0.1em;
 }
 
