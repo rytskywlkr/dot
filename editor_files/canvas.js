@@ -522,7 +522,6 @@ function drawEllipse(ctx, x0, y0, x1, y1, indexData, paletteIndex, scale) {
     iw = indexData.width,
     ih = indexData.height;
 
-  //console.log(x0, y0, x1, y1, w, h);
   ctx.beginPath();
   let x = ((x0 + x1) >> 1) * w;
   ctx.rect(x, y0 * h, w, h);
@@ -1232,77 +1231,23 @@ function flipImageV(data, w, h) {
 }
 
 // 右90度回転
-function rotate90R(ctx, indexData) {
-  let data = indexData.data,
-    w = indexData.width,
-    h = indexData.height;
+function rotate90R(ctx, orimonoData, palette, option, paletteData) {
 
-  let imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height),
-    buffer = new Uint32Array(imageData.data.buffer);
-
-  if (w === h) {
-    mirrorImageXY(data, w, h);
-    flipImageH(data, w, h);
-
-    mirrorImageXY(buffer, imageData.width, imageData.height);
-    flipImageH(buffer, imageData.width, imageData.height);
-    ctx.putImageData(imageData, 0, 0);
-  } else {
-    let temp = createOrimonoData(h, w);
-    copyMirrorImageXY(data, temp.data, w, h);
-    flipImageH(temp.data, temp.width, temp.height);
-    copyBuffer(temp.data, data, w * h);
-    indexData.width = h;
-    indexData.height = w;
-
-    let tempImageData = ctx.createImageData(
-        ctx.canvas.height,
-        ctx.canvas.width
-      ),
-      tempBuffer = new Uint32Array(tempImageData.data.buffer);
-    copyMirrorImageXY(buffer, tempBuffer, imageData.width, imageData.height);
-    flipImageH(tempBuffer, tempImageData.width, tempImageData.height);
-    ctx.canvas.width = imageData.height;
-    ctx.canvas.height = imageData.width;
-    ctx.putImageData(tempImageData, 0, 0);
+  let soshiki_temp = Array(orimonoData.soshiki_yoko);
+  for (let i = 0; i < soshiki_temp.length; i++) {
+    soshiki_temp[i] = Array(orimonoData.soshiki_tate);
+    for (let j = 0; j < soshiki_temp[i].length; j++) {
+      soshiki_temp[i][j] = 0;
+    }
   }
-}
-
-// 左90度回転
-function rotate90L(ctx, indexData) {
-  let data = indexData.data,
-    w = indexData.width,
-    h = indexData.height;
-
-  let imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height),
-    buffer = new Uint32Array(imageData.data.buffer);
-
-  if (w === h) {
-    mirrorImageXY(data, w, h);
-    flipImageV(data, w, h);
-
-    mirrorImageXY(buffer, imageData.width, imageData.height);
-    flipImageV(buffer, imageData.width, imageData.height);
-    ctx.putImageData(imageData, 0, 0);
-  } else {
-    let temp = createOrimonoData(h, w);
-    copyMirrorImageXY(data, temp.data, w, h);
-    flipImageV(temp.data, temp.width, temp.height);
-    copyBuffer(temp.data, data, w * h);
-    indexData.width = h;
-    indexData.height = w;
-
-    let tempImageData = ctx.createImageData(
-        ctx.canvas.height,
-        ctx.canvas.width
-      ),
-      tempBuffer = new Uint32Array(tempImageData.data.buffer);
-    copyMirrorImageXY(buffer, tempBuffer, imageData.width, imageData.height);
-    flipImageV(tempBuffer, tempImageData.width, tempImageData.height);
-    ctx.canvas.width = imageData.height;
-    ctx.canvas.height = imageData.width;
-    ctx.putImageData(tempImageData, 0, 0);
+  for (let i = 0; i < orimonoData.soshiki_data.length; i++) {
+    for (let j = 0; j < orimonoData.soshiki_data[i].length; j++) {
+      soshiki_temp[j][orimonoData.soshiki_yoko - 1 - i] =
+        orimonoData.soshiki_data[i][j];
+    }
   }
+  orimonoData.soshiki_data = soshiki_temp;
+  drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
 }
 
 function mirrorImageXY(data, w, h) {

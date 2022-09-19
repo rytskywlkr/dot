@@ -239,17 +239,13 @@
 
   // 回転
   function rotateRight() {
+    // 織方図では回転は組織図の回転だけでよい
     if (selection.enable) {
-      // 長方形の選択範囲を回転させるには一旦別の領域にコピーしておかないと消えてしまう
-      $.size($selection, selectionCtx.canvas.height, selectionCtx.canvas.width);
-      rotate90R(selectionCtx, selection.orimonoData);
-      selection.region.w = getCanvasWidth();
-      selection.region.h = getCanvasHeight();
-    } else {
-      record();
-      rotate90R(ctx, orimonoData);
-      drawPreview();
+      deselect();
     }
+    record();
+    rotate90R(ctx, orimonoData, palette, option, paletteData);
+    drawPreview();
   }
 
   function selectAll() {
@@ -508,8 +504,9 @@
   });
 
   $.bind($('monnsenhikikomi'), 'click', () => {
-    // エラーをリセット
+    // キャンバスをリセット
     clearCanvas(errorCtx);
+
     // 空の紋栓データを生成する
     let new_monsen_data = [];
     for (let i = 0; i < orimonoData.waku_maisu; i++) {
@@ -563,48 +560,13 @@
       return;
     }
 
-    // 紋栓図、引込図は先に全てクリアする
-    clearDots(
-      ctx,
-      orimonoData.monsen_min_x,
-      orimonoData.monsen_min_y,
-      orimonoData.monsen_max_x,
-      orimonoData.monsen_max_y,
-      option.scale
-    );
-    clearDots(
-      ctx,
-      orimonoData.hikikomi_min_x,
-      orimonoData.hikikomi_min_y,
-      orimonoData.hikikomi_max_x,
-      orimonoData.hikikomi_max_y,
-      option.scale
-    );
-
-    for (let i = 0; i < orimonoData.soshiki_tate; i++) {
-      // 紋線図を作成
-      for (let k = 0; k < orimonoData.soshiki_yoko; k++) {
-        let x = monsen_rows[i];
-        let y = k + orimonoData.monsen_min_y;
-        if (orimonoData.soshiki_data[i][k] != 0) {
-          drawDotOrimono(ctx, x, y, orimonoData, 1, option);
-        }
-      }
-      // 引込図を作成
-      for (let k = 0; k < orimonoData.waku_maisu; k++) {
-        let x = i + orimonoData.hikikomi_min_x;
-        let y = k + orimonoData.hikikomi_min_y;
-        if (k == monsen_rows[i]) {
-          drawDotOrimono(ctx, x, y, orimonoData, 1, option);
-        }
-      }
-    }
     orimonoData.monsen_data = structuredClone(new_monsen_data); // ディープコピー
     orimonoData.hikikomi_data = structuredClone(new_hikikomi_data); // ディープコピー
+    drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
   });
 
   $.bind($('monsen'), 'click', () => {
-    // エラーをリセット
+    // キャンバスをリセット
     clearCanvas(errorCtx);
 
     // 空の紋栓データを生成する
@@ -631,15 +593,6 @@
         // 対象の組織図の列の引込図に紋栓図の列番号が指定されており、
         // かつその紋栓図の列が未指定の場合、対象の組織図の列を紋栓図の列にコピーする
         new_monsen_data[monsen_row] = orimonoData.soshiki_data[i];
-        for (let k = 0; k < orimonoData.soshiki_data[i].length; k++) {
-          let x = monsen_row;
-          let y = k + orimonoData.soshiki_min_y;
-          if (orimonoData.soshiki_data[i][k] == 0) {
-            clearDotOrimono(ctx, x, y, orimonoData, option);
-          } else {
-            drawDotOrimono(ctx, x, y, orimonoData, 1, option);
-          }
-        }
       } else if (
         monsen_row !== undefined &&
         JSON.stringify(new_monsen_data[monsen_row]) !=
@@ -652,10 +605,11 @@
       }
     }
     orimonoData.monsen_data = structuredClone(new_monsen_data); // ディープコピー
+    drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
   });
 
   $.bind($('hikikomi'), 'click', () => {
-    // エラーをリセット
+    // キャンバスをリセット
     clearCanvas(errorCtx);
 
     // 空の引込データを生成する
@@ -675,22 +629,20 @@
           break;
         }
       }
-      for (let k = 0; k < orimonoData.waku_maisu; k++) {
-        let x = i + orimonoData.hikikomi_min_x;
-        let y = k + orimonoData.hikikomi_min_y;
-        if (monsen_row !== undefined && k == monsen_row) {
-          drawDotOrimono(ctx, x, y, orimonoData, 1, option);
-        } else {
-          clearDotOrimono(ctx, x, y, orimonoData, option);
-        }
-      }
     }
     orimonoData.hikikomi_data = structuredClone(new_hikikomi_data); // ディープコピー
+    drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
   });
 
   $.bind($('soshiki'), 'click', () => {
-    // エラーをリセット
+    // キャンバスをリセット
     clearCanvas(errorCtx);
+
+    // 空の引込データを生成する
+    let new_soshiki_data = [];
+    for (let i = 0; i < orimonoData.soshiki_tate; i++) {
+      new_soshiki_data[i] = new Uint8Array(orimonoData.soshiki_yoko);
+    }
 
     for (let i = 0; i < orimonoData.soshiki_tate; i++) {
       let monsen_count = orimonoData.hikikomi_data[i].findIndex((element) => {
@@ -699,24 +651,18 @@
       if (monsen_count == -1) continue;
       let monsen_column = orimonoData.monsen_data[monsen_count];
       for (let j = 0; j < orimonoData.soshiki_yoko; j++) {
-        orimonoData.soshiki_data[i][j] = monsen_column[j];
-        let x = orimonoData.soshiki_min_x + i;
-        let y = orimonoData.soshiki_min_y + j;
-        if (monsen_column[j] == 0) {
-          clearDot(ctx, x, y, option.scale);
+        new_soshiki_data[i][j] = monsen_column[j];
+        if (monsen_column[j] != 0) {
+          // drawDot(ctx, x, y, option.scale);
           // 組織図の一番左下からみた座標
-          let x_at_soshiki = x - orimonoData.soshiki_min_x;
-          let y_at_soshiki = y - orimonoData.soshiki_min_y;
-          orimonoData.soshiki_data[x_at_soshiki][y_at_soshiki] = 0;
-        } else {
-          drawDot(ctx, x, y, option.scale);
-          // 組織図の一番左下からみた座標
-          let x_at_soshiki = x - orimonoData.soshiki_min_x;
-          let y_at_soshiki = y - orimonoData.soshiki_min_y;
-          orimonoData.soshiki_data[x_at_soshiki][y_at_soshiki] = 1;
+          let x_at_soshiki = i;
+          let y_at_soshiki = j;
+          new_soshiki_data[x_at_soshiki][y_at_soshiki] = 1;
         }
       }
     }
+    orimonoData.soshiki_data = structuredClone(new_soshiki_data); // ディープコピー
+    drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
   });
 
   // サイズの指定
@@ -741,7 +687,10 @@
       toastr.error('基本サイズは組織サイズより小さくしてください。');
       return;
     }
-    if (20 < Number($('waku_maisu').value) || 1 > Number($('waku_maisu').value)) {
+    if (
+      20 < Number($('waku_maisu').value) ||
+      1 > Number($('waku_maisu').value)
+    ) {
       toastr.error('枠枚数は1〜20を指定して下さい。');
       return;
     }
@@ -987,7 +936,6 @@
       $.show($selection);
     },
     up: function (x, y) {
-      console.log('up2');
       let r = selection.region;
       r.x = this.left_bottom_x;
       r.y = this.left_bottom_y;
@@ -1344,7 +1292,6 @@
         } else {
           return;
         }
-        console.log('move:' + x + ':' + y);
         selection.region.x = x;
         selection.region.y = y;
         $.position($selection, x * s, y * s);
@@ -1366,9 +1313,7 @@
 
   $.bind($selection, 'mousedown', (e) => {
     left = e.target.offsetLeft;
-    console.log('top:' + top);
     // top = e.target.offsetTop;
-    console.log('top:' + top);
     down = true;
     offsetX = e.pageX;
     offsetY = e.pageY;
