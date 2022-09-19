@@ -5,8 +5,11 @@
 #editor {
 	padding-top: 80px;
 	padding-left: 20px;
-	width: 100%;
-	height: 512px;
+	padding-right: 20px;
+	padding-bottom: 20px;
+	width: auto;
+	height: auto;
+	display: inline-block;
 }
 
 #editor-canvas {

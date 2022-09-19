@@ -404,6 +404,8 @@
 
   $.position($('palette'), left + 420, top + 4);
   $.position($('view'), left + 420, top + 300);
+  $.hide($('palette'));
+  $.hide($('view'));
   $.show($('overlay'));
 
   // ローカルファイルの読み込み
@@ -557,9 +559,7 @@
 
     if (monsen_rows.some((e) => e === null)) {
       // 1つでも紋栓を計算できなければ処理終了
-      toastr.error('綜絖枚数内で紋栓を計算できませんでした', '', {
-        timeOut: 2000,
-      });
+      toastr.error('綜絖枚数内で紋栓を計算できませんでした');
       return;
     }
 
@@ -647,9 +647,7 @@
       ) {
         // 対象の組織図の列の引込図に紋栓図の列番号が指定されており、
         // 紋栓図と組織図の内容が異なる場合は、
-        toastr.error('綜絖枚数内で紋栓を計算できませんでした', '', {
-          timeOut: 2000,
-        });
+        toastr.error('綜絖枚数内で紋栓を計算できませんでした');
         return;
       }
     }
@@ -723,14 +721,33 @@
 
   // サイズの指定
   $.bind($('new-image-submit'), 'click', (e) => {
+    if (
+      400 < Number($('kihon_tate').value) ||
+      400 < Number($('kihon_yoko').value) ||
+      400 < Number($('soshiki_tate').value) ||
+      400 < Number($('soshiki_yoko').value) ||
+      1 > Number($('kihon_tate').value) ||
+      1 > Number($('kihon_yoko').value) ||
+      1 > Number($('soshiki_tate').value) ||
+      1 > Number($('soshiki_yoko').value)
+    ) {
+      toastr.error('たて糸本数・よこ糸本数は1〜400を指定して下さい。');
+      return;
+    }
+    if (
+      Number($('soshiki_tate').value) < Number($('kihon_tate').value) ||
+      Number($('soshiki_yoko').value) < Number($('kihon_yoko').value)
+    ) {
+      toastr.error('基本サイズは組織サイズより小さくしてください。');
+      return;
+    }
+    if (20 < Number($('waku_maisu').value) || 1 > Number($('waku_maisu').value)) {
+      toastr.error('枠枚数は1〜20を指定して下さい。');
+      return;
+    }
     $.hide($('new-image'));
-    //			$('#overlay').fadeOut();
     $.fadeOut($('overlay'));
     KeyMapper.bind(document, 'trigger');
-    // selection.orimonoData = createImage(
-    //   orimonoData.soshiki_tate,
-    //   orimonoData.soshiki_yoko
-    // );
     orimonoData = createOrimonoData(
       Number($('kihon_tate').value),
       Number($('kihon_yoko').value),
