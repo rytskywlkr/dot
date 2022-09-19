@@ -506,7 +506,7 @@
     $('transparent').classList.toggle('selected');
   });
 
-  $.bind($('monnsenhikikomi'), 'click', () => {
+  $.bind($('monsenhikikomi'), 'click', () => {
     // キャンバスをリセット
     clearCanvas(errorCtx);
 
@@ -539,7 +539,7 @@
           monsen_row = j;
           new_monsen_data[monsen_row] = orimonoData.soshiki_data[i];
           new_hikikomi_data[i][monsen_row] = 1;
-          new_monsen_data_set[i] = true;
+          new_monsen_data_set[j] = true;
           break;
         }
       }
