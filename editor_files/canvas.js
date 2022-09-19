@@ -1066,41 +1066,6 @@ function drawRangeIndexedImage(
   ctx.putImageData(dst, 0, 0);
 }
 
-// function drawOrimonoData(
-//   ctx,
-//   orimonoData,
-//   palette,
-//   scale,
-//   transparent,
-//   left,
-//   top
-// ) {
-//   let index = 0,
-//     data = image.data,
-//     paletteData = palette.data,
-//     dest = ctx.createImageData(image.width * scale, image.height * scale),
-//     w = dest.width,
-//     h = dest.height,
-//     stride = image.width,
-//     destData = dest.data,
-//     t = transparent === undefined ? 256 : transparent;
-//   (left = left === undefined ? 0 : left), (top = top === undefined ? 0 : top);
-//   for (let i = 0, p = 0; i < h; i++) {
-//     let y = (i / scale) ^ 0;
-//     for (let j = 0; j < w; j++) {
-//       let x = (j / scale) ^ 0;
-//       index = y * stride + x;
-//       let pindex = data[index] * 4;
-//       destData[p] = paletteData[pindex];
-//       destData[p + 1] = paletteData[pindex + 1];
-//       destData[p + 2] = paletteData[pindex + 2];
-//       destData[p + 3] = t === data[index] ? 0 : 255;
-//       p += 4;
-//     }
-//   }
-//   ctx.putImageData(dest, left, top);
-// }
-
 // タイリングして描画する
 function tilingIndexedImageData(
   ctx,
@@ -1170,69 +1135,21 @@ function drawImage(ctx, image, dx, dy, dw, dh) {
 }
 
 // 水平方向反転
-function flipH(ctx, indexData) {
-  let data = indexData.data,
-    w = indexData.width,
-    h = indexData.height;
-
-  flipImageH(data, w, h);
-
-  let imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
-
-  flipImageH(
-    new Uint32Array(imageData.data.buffer),
-    imageData.width,
-    imageData.height
-  );
-
-  ctx.putImageData(imageData, 0, 0);
-}
-
-function flipImageH(data, w, h) {
-  for (let i = 0; i < h; i++) {
-    let y = i * w;
-    for (let j = 0; j < ((w / 2) ^ 0); j++) {
-      let tmp = data[y + j];
-      data[y + j] = data[y + w - j - 1];
-      data[y + w - j - 1] = tmp;
-    }
-  }
+function flipH(ctx, orimonoData, palette, option, paletteData) {
+  orimonoData.soshiki_data.reverse();
+  drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
 }
 
 // 垂直方向反転
-function flipV(ctx, indexData) {
-  let data = indexData.data,
-    w = indexData.width,
-    h = indexData.height;
-
-  flipImageV(data, w, h);
-
-  let imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
-
-  flipImageV(
-    new Uint32Array(imageData.data.buffer),
-    imageData.width,
-    imageData.height
-  );
-
-  ctx.putImageData(imageData, 0, 0);
-}
-
-function flipImageV(data, w, h) {
-  for (let i = 0; i < ((h / 2) ^ 0); i++) {
-    let y = i * w,
-      x = (h - i - 1) * w;
-    for (let j = 0; j < w; j++) {
-      let tmp = data[y + j];
-      data[y + j] = data[x + j];
-      data[x + j] = tmp;
-    }
+function flipV(ctx, orimonoData, palette, option, paletteData) {
+  for (let i = 0; i < orimonoData.soshiki_data.length; i++) {
+    orimonoData.soshiki_data[i].reverse();
   }
+  drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
 }
 
 // 右90度回転
 function rotate90R(ctx, orimonoData, palette, option, paletteData) {
-
   let soshiki_temp = Array(orimonoData.soshiki_yoko);
   for (let i = 0; i < soshiki_temp.length; i++) {
     soshiki_temp[i] = Array(orimonoData.soshiki_tate);
@@ -1248,123 +1165,6 @@ function rotate90R(ctx, orimonoData, palette, option, paletteData) {
   }
   orimonoData.soshiki_data = soshiki_temp;
   drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
-}
-
-function mirrorImageXY(data, w, h) {
-  for (let i = 0; i < h; i++) {
-    let y = i * w;
-    for (let j = i + 1; j < w; j++) {
-      let tmp = data[y + j];
-      data[y + j] = data[j * h + i];
-      data[j * h + i] = tmp;
-    }
-  }
-  return data;
-}
-
-function copyMirrorImageXY(src, dst, w, h) {
-  for (let i = 0; i < h; i++) {
-    let y = i * w;
-    for (let j = 0; j < w; j++) {
-      dst[j * h + i] = src[y + j];
-    }
-  }
-  return dst;
-}
-
-// 水平方向シフト
-function shiftH(ctx, indexData, shift, scale) {
-  let data = indexData.data,
-    w = indexData.width,
-    h = indexData.height,
-    tmp = createOrimonoData(w, h);
-  shiftImageH(data, tmp.data, w, h, shift);
-  copyBuffer(tmp.data, indexData.data, tmp.data.length);
-
-  let imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height),
-    tmpData = ctx.createImageData(imageData.width, imageData.height),
-    buffer = new Uint32Array(imageData.data.buffer),
-    tmpBuffer = new Uint32Array(tmpData.data.buffer);
-  shiftImageH(
-    buffer,
-    tmpBuffer,
-    imageData.width,
-    imageData.height,
-    shift * scale
-  );
-  ctx.putImageData(tmpData, 0, 0);
-}
-
-function shiftImageH(data, tmp, w, h, shift) {
-  for (let i = 0; i < h; i++) {
-    let y = i * w;
-    for (let j = 0; j < w; j++) {
-      tmp[y + ((w + j + shift) % w)] = data[y + j];
-    }
-  }
-}
-
-function shiftImageH1(data, w, h, shift) {
-  if (shift > 0) {
-    shiftImageRight1(data, w, h);
-  } else {
-    shiftImageLeft1(data, w, h);
-  }
-}
-
-function shiftImageLeft1(data, w, h) {
-  for (let i = 0; i < h; i++) {
-    let y = i * w,
-      t = data[y];
-    for (let j = 0; j < w - 1; j++) {
-      data[y + j] = data[y + j + 1];
-    }
-    data[y + w - 1] = t;
-  }
-}
-
-function shiftImageRight1(data, w, h) {
-  for (let i = 0; i < h; i++) {
-    let y = i * w,
-      t = data[y + w - 1];
-    for (let j = w - 1; j >= 1; j--) {
-      data[y + j] = data[y + j - 1];
-    }
-    data[y] = t;
-  }
-}
-
-// 垂直方向シフト
-function shiftV(ctx, indexData, shift, scale) {
-  let data = indexData.data,
-    w = indexData.width,
-    h = indexData.height,
-    tmp = createOrimonoData(w, h);
-  shiftImageV(data, tmp.data, w, h, shift);
-  copyBuffer(tmp.data, indexData.data, tmp.data.length);
-
-  let imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height),
-    tmpData = ctx.createImageData(imageData.width, imageData.height),
-    buffer = new Uint32Array(imageData.data.buffer),
-    tmpBuffer = new Uint32Array(tmpData.data.buffer);
-  shiftImageV(
-    buffer,
-    tmpBuffer,
-    imageData.width,
-    imageData.height,
-    shift * scale
-  );
-  ctx.putImageData(tmpData, 0, 0);
-}
-
-function shiftImageV(data, tmp, w, h, shift) {
-  for (let i = 0; i < h; i++) {
-    let y = i * w,
-      yy = ((h + i + shift) % h) * w;
-    for (let j = 0; j < w; j++) {
-      tmp[yy + j] = data[y + j];
-    }
-  }
 }
 
 // 指定のインデックスのピクセルを透明にする

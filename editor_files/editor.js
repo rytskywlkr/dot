@@ -217,29 +217,32 @@
 
   // 垂直反転
   function flipVert() {
+    // 織方図では回転は組織図の回転だけでよい
+    clearCanvas(errorCtx);
     if (selection.enable) {
-      flipV(selectionCtx, selection.orimonoData);
-    } else {
-      record();
-      flipV(ctx, orimonoData);
-      drawPreview();
+      deselect();
     }
+    record();
+    flipV(ctx, orimonoData, palette, option, paletteData);
+    drawPreview();
   }
 
   // 水平反転
   function flipHorz() {
+    // 織方図では回転は組織図の回転だけでよい
+    clearCanvas(errorCtx);
     if (selection.enable) {
-      flipH(selectionCtx, selection.orimonoData);
-    } else {
-      record();
-      flipH(ctx, orimonoData);
-      drawPreview();
+      deselect();
     }
+    record();
+    flipH(ctx, orimonoData, palette, option, paletteData);
+    drawPreview();
   }
 
   // 回転
   function rotateRight() {
     // 織方図では回転は組織図の回転だけでよい
+    clearCanvas(errorCtx);
     if (selection.enable) {
       deselect();
     }
@@ -509,8 +512,11 @@
 
     // 空の紋栓データを生成する
     let new_monsen_data = [];
+    let new_monsen_data_set = [];
     for (let i = 0; i < orimonoData.waku_maisu; i++) {
       new_monsen_data[i] = new Uint8Array(orimonoData.soshiki_yoko);
+      // 紋栓データがセット済みかのフラグ。
+      new_monsen_data_set[i] = false;
     }
 
     // 空の引込データを生成する
@@ -523,16 +529,17 @@
     for (let i = 0; i < orimonoData.soshiki_tate; i++) {
       let monsen_row; // 紋栓図の列番号（左から何列目か）
       for (let j = 0; j < new_monsen_data.length; j++) {
-        // 紋栓図の列が空白の場合は、組織図から紋栓図の列を作成する
+        // 紋栓図の列がセット済みでない場合は、組織図から紋栓図の列を作成する
         // または紋栓図の列の内容が組織図の列の内容と同じだった場合は同じ列として扱う
         if (
-          new_monsen_data[j].every((e) => e === 0) ||
+          new_monsen_data_set[j] == false ||
           JSON.stringify(new_monsen_data[j]) ==
             JSON.stringify(orimonoData.soshiki_data[i])
         ) {
           monsen_row = j;
           new_monsen_data[monsen_row] = orimonoData.soshiki_data[i];
           new_hikikomi_data[i][monsen_row] = 1;
+          new_monsen_data_set[i] = true;
           break;
         }
       }
@@ -541,6 +548,7 @@
     }
 
     errorCtx.fillStyle = 'rgb(255, 194, 194)';
+    console.log(monsen_rows);
     for (let i = 0; i < monsen_rows.length; i++) {
       if (monsen_rows[i] == null) {
         drawErrorRow(
