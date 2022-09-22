@@ -1174,6 +1174,17 @@ function rotate90R(ctx, orimonoData, palette, option, paletteData) {
   drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
 }
 
+// 裏返し
+function reverseSoshiki(ctx, orimonoData, palette, option, paletteData) {
+  for (let i = 0; i < orimonoData.soshiki_data.length; i++) {
+    for (let j = 0; j < orimonoData.soshiki_data[i].length; j++) {
+      orimonoData.soshiki_data[i][j] =
+        orimonoData.soshiki_data[i][j] == 0 ? 1 : 0;
+    }
+  }
+  drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
+}
+
 // 指定のインデックスのピクセルを透明にする
 function drawClearColor(ctx, indexData, index, scale) {
   let data = indexData.data,

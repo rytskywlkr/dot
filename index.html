@@ -146,6 +146,25 @@
 							rotate_right
 						</span>
 					</li>
+					<li id="reverse">
+						<p>裏返し</p>
+						<span class="material-symbols-outlined">
+							u_turn_right
+						</span>
+					</li>
+					<li id="help">
+						<p>
+							,：黒塗り<br>
+							.：クリア<br>
+							↑：上に移動<br>
+							↓：下に移動<br>
+							→：右に移動<br>
+							←：左に移動<br>
+						</p>
+						<span class="material-symbols-outlined">
+							help
+						</span>
+					</li>
 					<!-- <li id="save">
 						<p>保存</p>
 						<span class="material-symbols-outlined">
@@ -165,7 +184,7 @@
 
 			<div id="editor">
 
-				
+
 				<div id="editor-canvas" width="192" height="192">
 					<!--<p>Canvas 32x32(100%)</p>-->
 					<canvas id="background" width="192" height="192"></canvas>
@@ -283,48 +302,48 @@
 			<div id="new-image" class="widget w-[32rem]">
 				<p>サイズ設定</p>
 				<form>
-						<div class="text-left">
-							<div class="block mb-2 text-sm font-medium text-gray-900">基本サイズ</div>
-							<div class="flex gap-2">
-								<div class="w-1/2">
-									<label for="kihon_tate" class="block mb-2 text-sm font-medium text-gray-900">たて糸本数</label>
-									<input type="number" id="kihon_tate" min="0" max="400" value="4"
-										class="w-full h-10 px-3 mb-2 text-base text-gray-700 placeholder-gray-600 border rounded-lg focus:shadow-outline"
-										placeholder="〜400" required>
-								</div>
-								<div class="w-1/2">
-									<label for="kihon_yoko" class="block mb-2 text-sm font-medium text-gray-900">よこ糸本数</label>
-									<input type="number" id="kihon_yoko" min="0" max="400" value="4"
-										class="w-full h-10 px-3 mb-2 text-base text-gray-700 placeholder-gray-600 border rounded-lg focus:shadow-outline"
-										placeholder="〜400" required>
-								</div>
+					<div class="text-left">
+						<div class="block mb-2 text-sm font-medium text-gray-900">基本サイズ</div>
+						<div class="flex gap-2">
+							<div class="w-1/2">
+								<label for="kihon_tate" class="block mb-2 text-sm font-medium text-gray-900">たて糸本数</label>
+								<input type="number" id="kihon_tate" min="0" max="400" value="4"
+									class="w-full h-10 px-3 mb-2 text-base text-gray-700 placeholder-gray-600 border rounded-lg focus:shadow-outline"
+									placeholder="〜400" required>
+							</div>
+							<div class="w-1/2">
+								<label for="kihon_yoko" class="block mb-2 text-sm font-medium text-gray-900">よこ糸本数</label>
+								<input type="number" id="kihon_yoko" min="0" max="400" value="4"
+									class="w-full h-10 px-3 mb-2 text-base text-gray-700 placeholder-gray-600 border rounded-lg focus:shadow-outline"
+									placeholder="〜400" required>
 							</div>
 						</div>
-						<div class="text-left">
-							<div class="block mb-2 text-sm font-medium text-gray-900">組織サイズ</div>
-							<div class="flex gap-2">
-								<div class="w-1/2">
-									<label for="soshiki_tate" class="block mb-2 text-sm font-medium text-gray-900">たて糸本数</label>
-									<input type="number" id="soshiki_tate" min="0" max="400" value="8" maxlength="4"
-										class="w-full h-10 px-3 mb-2 text-base text-gray-700 placeholder-gray-600 border rounded-lg focus:shadow-outline"
-										placeholder="〜400" required>
-								</div>
-								<div class="w-1/2">
-									<label for="soshiki_yoko" class="block mb-2 text-sm font-medium text-gray-900">よこ糸本数</label>
-									<input type="number" id="soshiki_yoko" min="0" max="400" value="8"
-										class="w-full h-10 px-3 mb-2 text-base text-gray-700 placeholder-gray-600 border rounded-lg focus:shadow-outline"
-										placeholder="〜400" required>
-								</div>
+					</div>
+					<div class="text-left">
+						<div class="block mb-2 text-sm font-medium text-gray-900">組織サイズ</div>
+						<div class="flex gap-2">
+							<div class="w-1/2">
+								<label for="soshiki_tate" class="block mb-2 text-sm font-medium text-gray-900">たて糸本数</label>
+								<input type="number" id="soshiki_tate" min="0" max="400" value="8" maxlength="4"
+									class="w-full h-10 px-3 mb-2 text-base text-gray-700 placeholder-gray-600 border rounded-lg focus:shadow-outline"
+									placeholder="〜400" required>
+							</div>
+							<div class="w-1/2">
+								<label for="soshiki_yoko" class="block mb-2 text-sm font-medium text-gray-900">よこ糸本数</label>
+								<input type="number" id="soshiki_yoko" min="0" max="400" value="8"
+									class="w-full h-10 px-3 mb-2 text-base text-gray-700 placeholder-gray-600 border rounded-lg focus:shadow-outline"
+									placeholder="〜400" required>
 							</div>
 						</div>
-						<div class="text-left">
-							<div class="block mb-2 text-sm font-medium text-gray-900">枠枚数</div>
-							<label for="waku_maisu" class="block mb-2 text-sm font-medium text-gray-900">枠枚数</label>
-							<input type="number" id="waku_maisu" min="0" max="50" value="2"
-								class="w-full h-10 px-3 mb-2 text-base text-gray-700 placeholder-gray-600 border rounded-lg focus:shadow-outline"
-								placeholder="〜50" required>
-						</div>
-						<input id="new-image-submit" type="button" value="OK">
+					</div>
+					<div class="text-left">
+						<div class="block mb-2 text-sm font-medium text-gray-900">枠枚数</div>
+						<label for="waku_maisu" class="block mb-2 text-sm font-medium text-gray-900">枠枚数</label>
+						<input type="number" id="waku_maisu" min="0" max="50" value="2"
+							class="w-full h-10 px-3 mb-2 text-base text-gray-700 placeholder-gray-600 border rounded-lg focus:shadow-outline"
+							placeholder="〜50" required>
+					</div>
+					<input id="new-image-submit" type="button" value="OK">
 				</form>
 			</div>
 		</div>

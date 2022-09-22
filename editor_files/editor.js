@@ -5,7 +5,7 @@
 */
 
 (function (global, $) {
-  'use strict';
+  ('use strict');
 
   // サーバのURL
   let docId = 0,
@@ -217,8 +217,9 @@
 
   // 垂直反転
   function flipVert() {
-    // 織方図では回転は組織図の回転だけでよい
+    // 織方図では組織図の垂直反転だけでよい
     clearCanvas(errorCtx);
+    clearCanvas(selectionCtx);
     deselect();
     record();
     flipV(ctx, orimonoData, palette, option, paletteData);
@@ -227,8 +228,9 @@
 
   // 水平反転
   function flipHorz() {
-    // 織方図では回転は組織図の回転だけでよい
+    // 織方図では組織図の水平反転だけでよい
     clearCanvas(errorCtx);
+    clearCanvas(selectionCtx);
     deselect();
     record();
     flipH(ctx, orimonoData, palette, option, paletteData);
@@ -237,11 +239,23 @@
 
   // 回転
   function rotateRight() {
-    // 織方図では回転は組織図の回転だけでよい
+    // 織方図では組織図の回転だけでよい
     clearCanvas(errorCtx);
+    clearCanvas(selectionCtx);
     deselect();
     record();
     rotate90R(ctx, orimonoData, palette, option, paletteData);
+    drawPreview();
+  }
+
+  // 裏返し
+  function reverse() {
+    // 織方図では組織図の裏返しだけでよい
+    clearCanvas(errorCtx);
+    clearCanvas(selectionCtx);
+    deselect();
+    record();
+    reverseSoshiki(ctx, orimonoData, palette, option, paletteData);
     drawPreview();
   }
 
@@ -498,6 +512,7 @@
   $.bind($('flipv'), 'click', flipVert);
   $.bind($('fliph'), 'click', flipHorz);
   $.bind($('rotater'), 'click', rotateRight);
+  $.bind($('reverse'), 'click', reverse);
 
   // スポイトツール
   $.bind($('dropper'), 'click', () => {
