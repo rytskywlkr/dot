@@ -757,10 +757,10 @@
       return;
     }
     if (
-      20 < Number($('waku_maisu').value) ||
+      24 < Number($('waku_maisu').value) ||
       1 > Number($('waku_maisu').value)
     ) {
-      toastr.error('枠枚数は1〜20を指定して下さい。');
+      toastr.error('枠枚数は1〜24を指定して下さい。');
       return;
     }
     $.hide($('new-image'));
