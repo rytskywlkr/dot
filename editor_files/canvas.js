@@ -186,11 +186,18 @@ function clearDotOrimono(ctx, x, y, orimonoData, option, padding = 1) {
 }
 
 // ドットの表示
+function selectDot(ctx, x, y, scale, padding = 1) {
+  let s = scale,
+    b = s - padding;
+  ctx.fillStyle = 'rgba(' + [0, 0, 255, 0.5] + ')';
+  ctx.fillRect(x * s + padding, y * s - padding, b, b);
+}
+
+// ドットの表示
 function drawDot(ctx, x, y, scale, padding = 1) {
   let s = scale,
     b = s - padding;
   ctx.fillRect(x * s + padding, y * s - padding, b, b);
-  // if (indexData) indexData.data[y * indexData.width + x] = paletteIndex;
 }
 
 function clearDot(ctx, x, y, scale, padding = 1) {

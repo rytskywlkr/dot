@@ -37,10 +37,10 @@ const KeyMapper = (function () {
 			delete keymap[key];
 		},
 		invoke: function (key) {
-			if (keymap.hasOwnProperty(key)) {
-				keymap[key](key);
-				return true;
-			}
+      if (keymap.hasOwnProperty(key)) {
+        keymap[key](key);
+        return true;
+      }
 			return false;
 		},
 		bind: function (target, event) {

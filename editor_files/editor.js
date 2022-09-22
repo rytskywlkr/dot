@@ -69,6 +69,8 @@
     hikikomi_min_y: 0,
     hikikomi_max_x: 0,
     hikikomi_max_y: 0,
+    select_x: 0,
+    select_y: 0,
   };
 
   let undoData = [],
@@ -132,8 +134,6 @@
     document.getElementById('editor-canvas').style.height =
       canvas.height + 'px';
 
-    if (selection.enable) {
-    }
     for (let i = 0; i < Layer.count(); i++) {
       let layer = Layer.get(i).canvas;
       layer.width = canvas.width;
@@ -219,9 +219,7 @@
   function flipVert() {
     // 織方図では回転は組織図の回転だけでよい
     clearCanvas(errorCtx);
-    if (selection.enable) {
-      deselect();
-    }
+    deselect();
     record();
     flipV(ctx, orimonoData, palette, option, paletteData);
     drawPreview();
@@ -231,9 +229,7 @@
   function flipHorz() {
     // 織方図では回転は組織図の回転だけでよい
     clearCanvas(errorCtx);
-    if (selection.enable) {
-      deselect();
-    }
+    deselect();
     record();
     flipH(ctx, orimonoData, palette, option, paletteData);
     drawPreview();
@@ -243,9 +239,7 @@
   function rotateRight() {
     // 織方図では回転は組織図の回転だけでよい
     clearCanvas(errorCtx);
-    if (selection.enable) {
-      deselect();
-    }
+    deselect();
     record();
     rotate90R(ctx, orimonoData, palette, option, paletteData);
     drawPreview();
@@ -260,7 +254,7 @@
     r.y = 0;
     r.w = getCanvasWidth();
     r.h = getCanvasHeight();
-    selectHandler.enable = true;
+    selection.enable = true;
     $.show($selection);
   }
 
@@ -294,6 +288,12 @@
     { key: 'M', f: selectTool('select'), name: '範囲選択' },
     { key: 'Shift+3', f: toggleGrid, name: 'グリッド' },
     { key: 'Ctrl+Z', f: undo, name: '元に戻す' },
+    { key: 'ARROWUP', f: arrow('up'), name: '上に1つ移動' },
+    { key: 'ARROWDOWN', f: arrow('down'), name: '下に1つ移動' },
+    { key: 'ARROWLEFT', f: arrow('left'), name: '左に1つ移動' },
+    { key: 'ARROWRIGHT', f: arrow('right'), name: '右に1つ移動' },
+    { key: ',', f: draw('draw'), name: '書き込み' },
+    { key: '.', f: draw('clear'), name: 'クリア' },
   ];
 
   KeyMapper.assign('Z', zoomIn);
@@ -323,7 +323,55 @@
     loadStorage('0');
   });
   KeyMapper.assign('O', toggleTool('outline'));
+  KeyMapper.assign('ARROWUP', arrow('up'));
+  KeyMapper.assign('ARROWDOWN', arrow('down'));
+  KeyMapper.assign('ARROWLEFT', arrow('left'));
+  KeyMapper.assign('ARROWRIGHT', arrow('right'));
+  KeyMapper.assign(',', draw('draw'));
+  KeyMapper.assign('.', draw('clear'));
   KeyMapper.bind(document, 'trigger');
+
+  function arrow(direction) {
+    return () => {
+      if (direction == 'up') {
+        selection.region.y = selection.region.y + 1;
+      } else if (direction == 'down') {
+        selection.region.y = selection.region.y - 1;
+      } else if (direction == 'left') {
+        selection.region.x = selection.region.x - 1;
+      } else if (direction == 'right') {
+        selection.region.x = selection.region.x + 1;
+      }
+
+      selectHandler.down(selection.region.x, selection.region.y);
+      selectHandler.up(false);
+    };
+  }
+
+  function draw(draw) {
+    return () => {
+      if (selection.type == null || selection.type == 'other') return;
+      clearCanvas(selectionCtx);
+      if (draw == 'draw') {
+        drawDotOrimono(
+          ctx,
+          selection.region.x,
+          selection.region.y,
+          orimonoData,
+          1,
+          option
+        );
+      } else {
+        clearDotOrimono(
+          ctx,
+          selection.region.x,
+          selection.region.y,
+          orimonoData,
+          option
+        );
+      }
+    };
+  }
 
   function createImage(w, h) {
     option.imageWidth = orimonoData.soshiki_tate + orimonoData.waku_maisu + 1;
@@ -366,9 +414,8 @@
       activeTool = $(t);
       activeTool.classList.add('selected');
       // 選択範囲解除
-      if (tool !== 'select' && selectHandler.enable) {
+      if (tool !== 'select') {
         deselect();
-        $.hide($selection);
       }
       dropper = false;
     };
@@ -548,7 +595,6 @@
     }
 
     errorCtx.fillStyle = 'rgb(255, 194, 194)';
-    console.log(monsen_rows);
     for (let i = 0; i < monsen_rows.length; i++) {
       if (monsen_rows[i] == null) {
         drawErrorRow(
@@ -835,7 +881,6 @@
 
   // 範囲選択
   selectHandler = {
-    enable: false,
     transparent: false,
     start_x: 0, // 最初に選んだグリッド
     start_y: 0, // 最初に選んだグリッド
@@ -857,10 +902,7 @@
       // ドラッグ(move)した際に組織図、紋栓図、引込図の範囲を超えさせないために必要
       selection.type = getArea(x, y);
 
-      if (this.enable) {
-        deselect();
-        this.enable = false;
-      }
+      deselect();
 
       selectionCtx.clearRect(
         0,
@@ -943,7 +985,9 @@
       $.size($selection, this.w * option.scale, this.h * option.scale);
       $.show($selection);
     },
-    up: function (x, y) {
+    up: function (enable) {
+      // enableがtrueだと選択を解除(deselect)した際に選択範囲をコピーする
+      // 範囲選択時はtrue,ペン選択・矢印カーソル移動はfalseが渡ってくる
       let r = selection.region;
       r.x = this.left_bottom_x;
       r.y = this.left_bottom_y;
@@ -953,9 +997,8 @@
       $.size($selection, this.w * option.scale, this.h * option.scale);
       $.show($selection);
       cut();
-      this.enable = true;
       selection.transparent = this.transparent;
-      selection.enable = true;
+      selection.enable = enable;
       selectionCtx.canvas.classList.add('active');
     },
   };
@@ -984,9 +1027,8 @@
         activeTool = prevTool;
         activeTool.classList.add('selected');
         // 選択範囲解除
-        if (tool !== 'select' && selectHandler.enable) {
+        if (tool !== 'select') {
           deselect();
-          $.hide($selection);
         }
         dropper = false;
       }
@@ -1008,6 +1050,9 @@
         case 'pen':
           down = true;
           drawDotOrimono(ctx, points[1], points[0], orimonoData, 1, option);
+          selectHandler.down(points[1], points[0]);
+          selectHandler.up(false);
+
           break;
         case 'paint':
           paint(
@@ -1226,7 +1271,7 @@
           option.scale
         );
       } else if (tool === 'select') {
-        selectHandler.up(x, y);
+        selectHandler.up(true);
       }
       grid();
     }
@@ -1587,7 +1632,6 @@
         }
       }
     }
-    console.log(orimonoData);
     drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
     drawPreview();
   }
