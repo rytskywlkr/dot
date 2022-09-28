@@ -139,11 +139,17 @@ function drawDotOrimono(ctx, x, y, orimonoData, paletteIndex, option) {
         orimonoData.kihon_data[i].kihon_min_y <= y &&
         y <= orimonoData.kihon_data[i].kihon_max_y
       ) {
+        console.log('i:' + i);
         dot_at_kihon_x = x - orimonoData.kihon_data[i].kihon_min_x;
         dot_at_kihon_y = y - orimonoData.kihon_data[i].kihon_min_y;
         break;
       }
     }
+    console.log(orimonoData);
+    console.log('x:' + x + ':y:' + y);
+    console.log(
+      'dot_at_kihon_x:' + dot_at_kihon_x + ':dot_at_kihon_y:' + dot_at_kihon_y
+    );
     for (let i = 0; i < orimonoData.kihon_data.length; i++) {
       // 表全体の一番左下からみた座標（基本毎の最小座標と基本毎の座標を加算）
       let x_at_all = orimonoData.kihon_data[i].kihon_min_x + dot_at_kihon_x;
@@ -164,7 +170,11 @@ function drawDotOrimono(ctx, x, y, orimonoData, paletteIndex, option) {
   } else if (type == 'hikikomi') {
     // 引込図にドットを描画する
     // 引込図の場合は1列に1ドットと決まっているので、列のドットをクリアしてからドットを描画する
-    for (let i = orimonoData.hikikomi_min_y; i <= orimonoData.hikikomi_max_y; i++) {
+    for (
+      let i = orimonoData.hikikomi_min_y;
+      i <= orimonoData.hikikomi_max_y;
+      i++
+    ) {
       clearDot(ctx, x, i, option.scale);
       orimonoData.hikikomi_data[x - orimonoData.hikikomi_min_x][i] = 0;
     }
@@ -1558,7 +1568,7 @@ function createOrimonoData(
         kihon_data[kihon_count][k] = new Uint8Array(kihon_tate);
       }
       kihon_data[kihon_count].kihon_min_x = soshiki_min_x + kihon_yoko * j;
-      kihon_data[kihon_count].kihon_min_y = soshiki_min_x + kihon_tate * i;
+      kihon_data[kihon_count].kihon_min_y = soshiki_min_y + kihon_tate * i;
       kihon_data[kihon_count].kihon_max_x =
         kihon_data[kihon_count].kihon_min_x + kihon_yoko - 1;
       kihon_data[kihon_count].kihon_max_y =
