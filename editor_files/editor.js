@@ -57,6 +57,35 @@
     soshiki_data: [],
     monsen_data: [],
     hikikomi_data: [],
+    monsen_color_data: [],
+    monsen_char_data: [],
+    hikikomi_color_data: [],
+    hikikomi_char_data: [],
+    osawari_data: [],
+    monsen_color_min_x: 0,
+    monsen_color_min_y: 0,
+    monsen_color_max_x: 0,
+    monsen_color_max_y: 0,
+    monsen_char_min_x: 0,
+    monsen_char_min_y: 0,
+    monsen_char_max_x: 0,
+    monsen_char_max_y: 0,
+    hikikomi_color_min_x: 0,
+    hikikomi_color_min_y: 0,
+    hikikomi_color_max_x: 0,
+    hikikomi_color_max_y: 0,
+    hikikomi_char_min_x: 0,
+    hikikomi_char_min_y: 0,
+    hikikomi_char_max_x: 0,
+    hikikomi_char_max_y: 0,
+    osawari_min_x: 0,
+    osawari_min_y: 0,
+    osawari_max_x: 0,
+    osawari_max_y: 0,
+    kanren_min_x: 0,
+    kanren_min_y: 0,
+    kanren_max_x: 0,
+    kanren_max_y: 0,
     soshiki_min_x: 0,
     soshiki_min_y: 0,
     soshiki_max_x: 0,
@@ -96,6 +125,61 @@
     type: null,
   };
 
+  // Canvasを生成
+  $.bind($('generate-canvas'), 'click', (e) => {
+    if (
+      400 < Number($('kihon_tate').value) ||
+      400 < Number($('kihon_yoko').value) ||
+      400 < Number($('soshiki_tate').value) ||
+      400 < Number($('soshiki_yoko').value) ||
+      1 > Number($('kihon_tate').value) ||
+      1 > Number($('kihon_yoko').value) ||
+      1 > Number($('soshiki_tate').value) ||
+      1 > Number($('soshiki_yoko').value)
+    ) {
+      toastr.error('たて糸本数・よこ糸本数は1〜400を指定して下さい。');
+      return;
+    }
+    if (
+      Number($('soshiki_tate').value) < Number($('kihon_tate').value) ||
+      Number($('soshiki_yoko').value) < Number($('kihon_yoko').value)
+    ) {
+      toastr.error('基本サイズは組織サイズより小さくしてください。');
+      return;
+    }
+    if (
+      24 < Number($('waku_maisu').value) ||
+      1 > Number($('waku_maisu').value)
+    ) {
+      toastr.error('枠枚数は1〜24を指定して下さい。');
+      return;
+    }
+    $.hide($('new-image'));
+    $.fadeOut($('overlay'));
+    KeyMapper.bind(document, 'trigger');
+    orimonoData = createOrimonoData(
+      Number($('kihon_tate').value),
+      Number($('kihon_yoko').value),
+      Number($('soshiki_tate').value),
+      Number($('soshiki_yoko').value),
+      Number($('waku_maisu').value)
+    );
+
+    resize();
+    grid();
+    ctx.fillStyle = palette[0];
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    drawPreview();
+    Layer.set(ctx, ctx.canvas, orimonoData);
+
+    // 一番下にスクロール
+    // scrollHeight ページの高さ clientHeight ブラウザの高さ
+    let elm = document.documentElement;
+    let bottom = elm.scrollHeight - elm.clientHeight;
+    // 垂直方向へ移動
+    window.scroll(0, bottom);
+  });
+
   // プレビュー画像を描画する
   function drawPreview() {
     preview.canvas.width = 84;
@@ -107,15 +191,13 @@
 
   function getCanvasWidth() {
     // canvasの横幅は、枠枚数＋１（空白列）＋組織図の経糸本数をスケールで掛ける
-    let width =
-      (orimonoData.waku_maisu + 1 + orimonoData.soshiki_tate) * option.scale;
+    let width = orimonoData.soshiki_max_x * option.scale + 1; // translateで開始位置をX,Yとも1ずらして線が消えないようにしているのでキャンバスサイズも+1px
     return width;
   }
 
   function getCanvasHeight() {
     // canvasの横幅は、枠枚数＋１（空白列）＋組織図の緯糸本数をスケールで掛ける
-    let width =
-      (orimonoData.waku_maisu + 1 + orimonoData.soshiki_yoko) * option.scale;
+    let width = orimonoData.soshiki_max_y * option.scale + 1; // translateで開始位置をX,Yとも1ずらして線が消えないようにしているのでキャンバスサイズも+1px
     return width;
   }
   // キャンバスをリサイズする
@@ -139,13 +221,13 @@
       layer.width = canvas.width;
       layer.height = canvas.height;
     }
-    ctx.translate(0, canvas.height); // 原点を左下に移動
+    ctx.translate(1, canvas.height - 1); // 原点を左下に移動
     ctx.scale(1, -1); // 上記に伴いY軸の図り方を反転
-    work.translate(0, canvas.height); // 原点を左下に移動
+    work.translate(1, canvas.height - 1); // 原点を左下に移動
     work.scale(1, -1); // 上記に伴いY軸の図り方を反転
-    errorCtx.translate(0, canvas.height); // 原点を左下に移動
+    errorCtx.translate(1, canvas.height - 1); // 原点を左下に移動
     errorCtx.scale(1, -1); // 上記に伴いY軸の図り方を反転
-    selectionCtx.translate(0, canvas.height); // 原点を左下に移動
+    selectionCtx.translate(1, canvas.height - 1); // 原点を左下に移動
     selectionCtx.scale(1, -1); // 上記に伴いY軸の図り方を反転
   }
 
@@ -734,62 +816,6 @@
     drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
   });
 
-  // サイズの指定
-  $.bind($('new-image-submit'), 'click', (e) => {
-    if (
-      400 < Number($('kihon_tate').value) ||
-      400 < Number($('kihon_yoko').value) ||
-      400 < Number($('soshiki_tate').value) ||
-      400 < Number($('soshiki_yoko').value) ||
-      1 > Number($('kihon_tate').value) ||
-      1 > Number($('kihon_yoko').value) ||
-      1 > Number($('soshiki_tate').value) ||
-      1 > Number($('soshiki_yoko').value)
-    ) {
-      toastr.error('たて糸本数・よこ糸本数は1〜400を指定して下さい。');
-      return;
-    }
-    if (
-      Number($('soshiki_tate').value) < Number($('kihon_tate').value) ||
-      Number($('soshiki_yoko').value) < Number($('kihon_yoko').value)
-    ) {
-      toastr.error('基本サイズは組織サイズより小さくしてください。');
-      return;
-    }
-    if (
-      24 < Number($('waku_maisu').value) ||
-      1 > Number($('waku_maisu').value)
-    ) {
-      toastr.error('枠枚数は1〜24を指定して下さい。');
-      return;
-    }
-    $.hide($('new-image'));
-    $.fadeOut($('overlay'));
-    KeyMapper.bind(document, 'trigger');
-    orimonoData = createOrimonoData(
-      Number($('kihon_tate').value),
-      Number($('kihon_yoko').value),
-      Number($('soshiki_tate').value),
-      Number($('soshiki_yoko').value),
-      Number($('waku_maisu').value),
-      option.scale
-    );
-
-    resize();
-    grid();
-    ctx.fillStyle = palette[0];
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    drawPreview();
-    Layer.set(ctx, ctx.canvas, orimonoData);
-
-    // 一番下にスクロール
-    // scrollHeight ページの高さ clientHeight ブラウザの高さ
-    let elm = document.documentElement;
-    let bottom = elm.scrollHeight - elm.clientHeight;
-    // 垂直方向へ移動
-    window.scroll(0, bottom);
-  });
-
   if (mode === 'fork' || mode === 'edit') {
     $.hide($('new-image'));
 
@@ -913,11 +939,11 @@
       this.w = 1;
       this.h = 1;
 
+      deselect();
+
       // 最初に選択(down)した場所が組織図、紋栓図、引込図のどれかを判断
       // ドラッグ(move)した際に組織図、紋栓図、引込図の範囲を超えさせないために必要
-      selection.type = getArea(x, y);
-
-      deselect();
+      selection.type = getArea(x, y, orimonoData);
 
       selectionCtx.clearRect(
         0,
@@ -938,48 +964,27 @@
     },
     move: function (x, y) {
       // 組織図、紋栓図、引込図の範囲を超えないようにする
+      let min_x, max_x, min_y, max_y;
       if (selection.type == 'soshiki') {
-        this.end_x =
-          x < orimonoData.soshiki_min_x
-            ? orimonoData.soshiki_min_x
-            : x > orimonoData.soshiki_max_x
-            ? orimonoData.soshiki_max_x
-            : x;
-        this.end_y =
-          y < orimonoData.soshiki_min_y
-            ? orimonoData.soshiki_min_y
-            : y > orimonoData.soshiki_max_y
-            ? orimonoData.soshiki_max_y
-            : y;
+        min_x = orimonoData.soshiki_min_x;
+        max_x = orimonoData.soshiki_max_x;
+        min_y = orimonoData.soshiki_min_y;
+        max_y = orimonoData.soshiki_max_y;
       } else if (selection.type == 'monsen') {
-        this.end_x =
-          x < orimonoData.monsen_min_x
-            ? orimonoData.monsen_min_x
-            : x > orimonoData.monsen_max_x
-            ? orimonoData.monsen_max_x
-            : x;
-        this.end_y =
-          y < orimonoData.monsen_min_y
-            ? orimonoData.monsen_min_y
-            : y > orimonoData.monsen_max_y
-            ? orimonoData.monsen_max_y
-            : y;
+        min_x = orimonoData.monsen_min_x;
+        max_x = orimonoData.monsen_max_x;
+        min_y = orimonoData.monsen_min_y;
+        max_y = orimonoData.monsen_max_y;
       } else if (selection.type == 'hikikomi') {
-        this.end_x =
-          x < orimonoData.hikikomi_min_x
-            ? orimonoData.hikikomi_min_x
-            : x > orimonoData.hikikomi_max_x
-            ? orimonoData.hikikomi_max_x
-            : x;
-        this.end_y =
-          y < orimonoData.hikikomi_min_y
-            ? orimonoData.hikikomi_min_y
-            : y > orimonoData.hikikomi_max_y
-            ? orimonoData.hikikomi_max_y
-            : y;
+        min_x = orimonoData.hikikomi_min_x;
+        max_x = orimonoData.hikikomi_max_x;
+        min_y = orimonoData.hikikomi_min_y;
+        max_y = orimonoData.hikikomi_max_y;
       } else {
         return;
       }
+      this.end_x = getAreaEnd(x, min_x, max_x);
+      this.end_y = getAreaEnd(y, min_y, max_y);
 
       this.w = Math.abs(this.end_x - this.start_x) + 1;
       this.h = Math.abs(this.end_y - this.start_y) + 1;
@@ -1017,6 +1022,22 @@
       selectionCtx.canvas.classList.add('active');
     },
   };
+
+  function getAreaEnd(value, min, max) {
+    // 選択エリアの終端を取得する
+    // 最小値よりも小さければ最小値を返却
+    // 最大値よりも大きければ最大値-1を返却（最大値から選択エリアを生成するとはみ出してしまう）
+    // それ以外はそのままの値を返却
+    return value < min ? min : value >= max ? max - 1 : value;
+  }
+
+  function getAreaEndWithArea(value, min, max, area) {
+    // 選択エリアの終端を取得する
+    // 最小値よりも小さければ最小値を返却
+    // 最大値よりも大きければ最大値-1を返却（最大値から選択エリアを生成するとはみ出してしまう）
+    // それ以外はそのままの値を返却
+    return value < min ? min : value + area >= max ? max - area : value;
+  }
 
   $.bind($('work'), 'mousedown', (e) => {
     let r = work.canvas.getBoundingClientRect();
@@ -1317,49 +1338,29 @@
         let s = option.scale,
           x = ((e.pageX - offsetX + left) / s) ^ 0,
           y = ((work.canvas.height - e.pageY + top) / s) ^ 0;
+
+        let min_x, max_x, min_y, max_y;
         if (selection.type == 'soshiki') {
-          // 組織図の範囲を超えないように制御する
-          x =
-            x < orimonoData.soshiki_min_x
-              ? orimonoData.soshiki_min_x
-              : x + selection.region.w > orimonoData.soshiki_max_x
-              ? orimonoData.soshiki_max_x - selection.region.w + 1
-              : x;
-          y =
-            y < orimonoData.soshiki_min_y
-              ? orimonoData.soshiki_min_y
-              : y + selection.region.h > orimonoData.soshiki_max_y
-              ? orimonoData.soshiki_max_y - selection.region.h + 1
-              : y;
+          min_x = orimonoData.soshiki_min_x;
+          max_x = orimonoData.soshiki_max_x;
+          min_y = orimonoData.soshiki_min_y;
+          max_y = orimonoData.soshiki_max_y;
         } else if (selection.type == 'monsen') {
-          x =
-            x < orimonoData.monsen_min_x
-              ? orimonoData.monsen_min_x
-              : x + selection.region.w > orimonoData.monsen_max_x
-              ? orimonoData.monsen_max_x - selection.region.w + 1
-              : x;
-          y =
-            y < orimonoData.monsen_min_y
-              ? orimonoData.monsen_min_y
-              : y + selection.region.h > orimonoData.monsen_max_y
-              ? orimonoData.monsen_max_y - selection.region.h + 1
-              : y;
+          min_x = orimonoData.monsen_min_x;
+          max_x = orimonoData.monsen_max_x;
+          min_y = orimonoData.monsen_min_y;
+          max_y = orimonoData.monsen_max_y;
         } else if (selection.type == 'hikikomi') {
-          x =
-            x < orimonoData.hikikomi_min_x
-              ? orimonoData.hikikomi_min_x
-              : x + selection.region.w > orimonoData.hikikomi_max_x
-              ? orimonoData.hikikomi_max_x - selection.region.w + 1
-              : x;
-          y =
-            y < orimonoData.hikikomi_min_y
-              ? orimonoData.hikikomi_min_y
-              : y + selection.region.h > orimonoData.hikikomi_max_y
-              ? orimonoData.hikikomi_max_y - selection.region.h + 1
-              : y;
+          min_x = orimonoData.hikikomi_min_x;
+          max_x = orimonoData.hikikomi_max_x;
+          min_y = orimonoData.hikikomi_min_y;
+          max_y = orimonoData.hikikomi_max_y;
         } else {
           return;
         }
+        x = getAreaEndWithArea(x, min_x, max_x, selection.region.w);
+        y = getAreaEndWithArea(y, min_y, max_y, selection.region.h);
+
         selection.region.x = x;
         selection.region.y = y;
         $.position($selection, x * s, y * s);
@@ -1672,34 +1673,6 @@
       }
     }
     deselect();
-  }
-
-  // 組織図、紋栓図、引込図、それ以外かを判定する
-  function getArea(x, y) {
-    if (
-      orimonoData.soshiki_min_x <= x &&
-      orimonoData.soshiki_max_x >= x &&
-      orimonoData.soshiki_min_y <= y &&
-      orimonoData.soshiki_max_y >= y
-    ) {
-      return 'soshiki';
-    } else if (
-      orimonoData.monsen_min_x <= x &&
-      orimonoData.monsen_max_x >= x &&
-      orimonoData.monsen_min_y <= y &&
-      orimonoData.monsen_max_y >= y
-    ) {
-      return 'monsen';
-    } else if (
-      orimonoData.hikikomi_min_x <= x &&
-      orimonoData.hikikomi_max_x >= x &&
-      orimonoData.hikikomi_min_y <= y &&
-      orimonoData.hikikomi_max_y >= y
-    ) {
-      return 'hikikomi';
-    } else {
-      return 'other';
-    }
   }
 
   // 画面更新
