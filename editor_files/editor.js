@@ -905,6 +905,7 @@
     Palette.setPaletteData(paletteData, true);
   });
 
+  // 右クリック
   $.bind($('work'), 'contextmenu', (e) => {
     record();
     let r = work.canvas.getBoundingClientRect();
@@ -1391,6 +1392,12 @@
     $.bind('mouseup', moveHandler.up);
     $.bind('mousemove', moveHandler.move);
     e.preventDefault();
+  });
+
+  $.bind($('selection'), 'contextmenu', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
   });
 
   let $layerList = $('layer-list'),
