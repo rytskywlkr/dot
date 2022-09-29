@@ -37,9 +37,9 @@
     fit: true,
   };
   const option = {};
-  option.scales = [1, 2, 4, 6, 8, 12, 16, 20, 24];
-  option.fontSizes = [1, 2, 4, 6, 8, 12, 16, 14, 24];
-  option.zoom = 7;
+  option.scales = [6, 8, 12, 16, 20, 24];
+  option.fontSizes = [6, 8, 10, 14, 16, 20];
+  option.zoom = 4;
   option.scale = option.scales[option.zoom];
   option.fontSize = option.fontSizes[option.zoom];
   option.gridOn = true;
@@ -194,7 +194,6 @@
 
   function getCanvasWidth() {
     // canvasの横幅は、枠枚数＋１（空白列）＋組織図の経糸本数をスケールで掛ける
-    console.log('devicePixelRatio' + devicePixelRatio);
     let width = orimonoData.soshiki_max_x * option.scale + 1; // translateで開始位置をX,Yとも1ずらして線が消えないようにしているのでキャンバスサイズも+1px
     return width;
   }
@@ -249,8 +248,9 @@
 
   function zoom() {
     option.scale = option.scales[option.zoom];
+    option.fontSize = option.fontSizes[option.zoom];
     resize();
-    drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
+    drawOrimonoData(ctx, charCtx, orimonoData, palette, option, paletteData);
   }
 
   // 拡大
@@ -288,7 +288,7 @@
 
   // グリッドの表示
   function grid() {
-    if (option.gridOn && option.zoom > 2) {
+    if (option.gridOn) {
       drawGrid(work, option, orimonoData);
     }
   }
@@ -396,10 +396,11 @@
     { key: 'ARROWDOWN', f: arrow('down'), name: '下に1つ移動' },
     { key: 'ARROWLEFT', f: arrow('left'), name: '左に1つ移動' },
     { key: 'ARROWRIGHT', f: arrow('right'), name: '右に1つ移動' },
-    { key: ',', f: draw('draw'), name: '書き込み' },
+    { key: ' ', f: arrow('right'), name: 'クリア' },
+    { key: 'BACKSPACE', f: clearByKeyboard(), name: 'クリア' },
+    { key: ',', f: clearByKeyboard(), name: '書き込み' },
     { key: '.', f: draw('clear'), name: 'クリア' },
   ];
-
 
   KeyMapper.assign('Ctrl+Z', undo);
   KeyMapper.assign('Ctrl+Y', redo);
@@ -410,35 +411,47 @@
   KeyMapper.assign('ARROWRIGHT', arrow('right'));
   KeyMapper.assign(',', draw('draw'));
   KeyMapper.assign('.', draw('clear'));
-  KeyMapper.assign('DRAWCHAR', drawChar());
+  KeyMapper.assign('DRAWCHAR', drawCharByKeyboard());
+  KeyMapper.assign(' ', clearByKeyboard());
+  KeyMapper.assign('BACKSPACE', clearByKeyboard());
   KeyMapper.bind(document, 'trigger');
 
-  function drawChar() {
+  function drawCharByKeyboard() {
     return (char) => {
       if (
         selection.type == 'monsen-char' ||
         selection.type == 'hikikomi-char'
       ) {
-        charCtx.clearRect(
-          selection.region.x * option.scale + 5,
-          charCtx.canvas.height / 2 - selection.region.y * option.scale - 5,
-          option.scale,
-          -option.scale
-        );
-        charCtx.font = option.fontSize + 'px sans-serif';
-        charCtx.fillText(
-          char,
-          selection.region.x * option.scale + 5,
-          charCtx.canvas.height / 2 - selection.region.y * option.scale - 5
-        );
+        let x = selection.region.x;
+        let y = selection.region.y;
+        clearChar(charCtx, x, y, option);
+        drawChar(charCtx, char, x, y, option);
         if (selection.type == 'monsen-char') {
-          orimonoData.monsen_char_data[
-            selection.region.y - orimonoData.monsen_char_min_y
-          ] = char;
+          orimonoData.monsen_char_data[y - orimonoData.monsen_char_min_y] =
+            char;
         } else {
-          orimonoData.hikikomi_char_data[
-            selection.region.x - orimonoData.hikikomi_char_min_x
-          ] = char;
+          orimonoData.hikikomi_char_data[x - orimonoData.hikikomi_char_min_x] =
+            char;
+        }
+      }
+    };
+  }
+
+  function clearByKeyboard() {
+    return () => {
+      if (
+        selection.type == 'monsen-char' ||
+        selection.type == 'hikikomi-char'
+      ) {
+        let x = selection.region.x;
+        let y = selection.region.y;
+        clearChar(charCtx, x, y, option);
+        if (selection.type == 'monsen-char') {
+          orimonoData.monsen_char_data[y - orimonoData.monsen_char_min_y] =
+            undefined;
+        } else {
+          orimonoData.hikikomi_char_data[x - orimonoData.hikikomi_char_min_x] =
+            undefined;
         }
       }
     };
@@ -584,7 +597,7 @@
     Palette.setFrontColor(0);
     palette = Palette.getPaletteData();
     resize();
-    drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
+    drawOrimonoData(ctx, charCtx, orimonoData, palette, option, paletteData);
     grid();
     drawPreview();
     Layer.clear();
@@ -732,7 +745,7 @@
 
     orimonoData.monsen_data = structuredClone(new_monsen_data); // ディープコピー
     orimonoData.hikikomi_data = structuredClone(new_hikikomi_data); // ディープコピー
-    drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
+    drawOrimonoData(ctx, charCtx, orimonoData, palette, option, paletteData);
   });
 
   $.bind($('monsen'), 'click', () => {
@@ -775,7 +788,7 @@
       }
     }
     orimonoData.monsen_data = structuredClone(new_monsen_data); // ディープコピー
-    drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
+    drawOrimonoData(ctx, charCtx, orimonoData, palette, option, paletteData);
   });
 
   $.bind($('hikikomi'), 'click', () => {
@@ -801,7 +814,7 @@
       }
     }
     orimonoData.hikikomi_data = structuredClone(new_hikikomi_data); // ディープコピー
-    drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
+    drawOrimonoData(ctx, charCtx, orimonoData, palette, option, paletteData);
   });
 
   $.bind($('soshiki'), 'click', () => {
@@ -832,7 +845,7 @@
       }
     }
     orimonoData.soshiki_data = structuredClone(new_soshiki_data); // ディープコピー
-    drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
+    drawOrimonoData(ctx, charCtx, orimonoData, palette, option, paletteData);
   });
 
   if (mode === 'fork' || mode === 'edit') {
@@ -860,7 +873,7 @@
       resize();
       ctx.fillStyle = palette[0];
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
+      drawOrimonoData(ctx, charCtx, orimonoData, palette, option, paletteData);
       drawPreview();
     });
   } else {
@@ -905,6 +918,7 @@
       }
       drawOrimonoData(
         layer.ctx,
+        charCtx,
         layer.orimonoData,
         palette,
         option,
@@ -1476,7 +1490,7 @@
         idx.height = data.height;
         const x = ((32 - idx.width) / 2) ^ 0;
         const y = ((32 - idx.height) / 2) ^ 0;
-        drawOrimonoData(ctx, idx, p, option, 256, x, y);
+        drawOrimonoData(ctx, charCtx, idx, p, option, 256, x, y);
       }
     }
   }
@@ -1576,7 +1590,7 @@
       pushRecord(redoData);
       orimonoData = copyOrimonoData(temp);
       clearCanvas(ctx);
-      drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
+      drawOrimonoData(ctx, charCtx, orimonoData, palette, option, paletteData);
       drawPreview();
     }
   }
@@ -1588,7 +1602,7 @@
     if (temp) {
       pushRecord(undoData);
       orimonoData = copyOrimonoData(temp);
-      drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
+      drawOrimonoData(ctx, charCtx, orimonoData, palette, option, paletteData);
       drawPreview();
     }
   }
@@ -1674,7 +1688,7 @@
         }
       }
     }
-    drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
+    drawOrimonoData(ctx, charCtx, orimonoData, palette, option, paletteData);
     drawPreview();
   }
 

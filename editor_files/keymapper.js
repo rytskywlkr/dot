@@ -46,7 +46,6 @@ const KeyMapper = (function () {
 
       var reg = new RegExp(/^[0-9A-Z]$/);
       if (reg.test(key)) {
-        // 全て文字でよいか
         keymap['DRAWCHAR'](key);
         return true;
       }

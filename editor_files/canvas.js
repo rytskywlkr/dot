@@ -139,15 +139,11 @@ function drawDotOrimono(ctx, x, y, orimonoData, paletteIndex, option) {
         orimonoData.kihon_data[i].kihon_min_y <= y &&
         y <= orimonoData.kihon_data[i].kihon_max_y
       ) {
-        console.log('i:' + i);
         dot_at_kihon_x = x - orimonoData.kihon_data[i].kihon_min_x;
         dot_at_kihon_y = y - orimonoData.kihon_data[i].kihon_min_y;
         break;
       }
     }
-    console.log(orimonoData);
-    console.log('x:' + x + ':y:' + y);
-    console.log(
       'dot_at_kihon_x:' + dot_at_kihon_x + ':dot_at_kihon_y:' + dot_at_kihon_y
     );
     for (let i = 0; i < orimonoData.kihon_data.length; i++) {
@@ -287,7 +283,28 @@ function clearDots(ctx, start_x, start_y, end_x, end_y, scale, padding = 1) {
   }
 }
 
-// ドットの表示
+function drawChar(charCtx, char, x, y, option) {
+  let padding_x = option.fontSize / 4;
+  let padding_y = option.fontSize / 4 - 1;
+  charCtx.font = option.fontSize + 'px sans-serif';
+  charCtx.fillText(
+    char,
+    x * option.scale + padding_x,
+    charCtx.canvas.height / 2 - y * option.scale - padding_y
+  );
+}
+
+function clearChar(charCtx, x, y, option) {
+  let padding_x = option.fontSize / 4;
+  let padding_y = option.fontSize / 4 - 1;
+  charCtx.clearRect(
+    x * option.scale + padding_x,
+    charCtx.canvas.height / 2 - y * option.scale - padding_y,
+    option.scale,
+    -option.scale
+  );
+}
+
 function drawErrorRow(errorCtx, start_x, end_x, start_y, end_y, scale) {
   let padding = 1;
   errorCtx.fillRect(
@@ -1156,6 +1173,7 @@ function drawGrid(ctx, option, orimonoData) {
 // インデックスカラーイメージを描画する
 function drawOrimonoData(
   ctx,
+  charCtx,
   orimonoData,
   palette,
   option,
@@ -1203,6 +1221,32 @@ function drawOrimonoData(
           option.scale
         );
       }
+    }
+  }
+
+  // 紋栓文字を描画
+  for (let y = 0; y < orimonoData.monsen_char_data.length; y++) {
+    if (orimonoData.monsen_char_data[y] !== undefined) {
+      drawChar(
+        charCtx,
+        orimonoData.monsen_char_data[y],
+        orimonoData.monsen_char_min_x,
+        y + orimonoData.monsen_char_min_y,
+        option
+      );
+    }
+  }
+
+  // 引込文字を描画
+  for (let x = 0; x < orimonoData.hikikomi_char_data.length; x++) {
+    if (orimonoData.hikikomi_char_data[x] !== undefined) {
+      drawChar(
+        charCtx,
+        orimonoData.hikikomi_char_data[x],
+        x + orimonoData.hikikomi_char_min_x,
+        orimonoData.hikikomi_char_min_y,
+        option
+      );
     }
   }
 }
