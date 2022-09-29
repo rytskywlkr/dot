@@ -144,8 +144,7 @@ function drawDotOrimono(ctx, x, y, orimonoData, paletteIndex, option) {
         break;
       }
     }
-      'dot_at_kihon_x:' + dot_at_kihon_x + ':dot_at_kihon_y:' + dot_at_kihon_y
-    );
+
     for (let i = 0; i < orimonoData.kihon_data.length; i++) {
       // 表全体の一番左下からみた座標（基本毎の最小座標と基本毎の座標を加算）
       let x_at_all = orimonoData.kihon_data[i].kihon_min_x + dot_at_kihon_x;
