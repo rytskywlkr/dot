@@ -937,7 +937,7 @@ function drawGrid(ctx, option, orimonoData) {
   ctx.lineWidth = 1.0;
   ctx.beginPath();
 
-  // 関連図縦線（関連図というのは造語。左下の紋栓図と引込図を関連付けるもの）
+  // 関連図（関連図というのは造語。左下の紋栓図と引込図を関連付けるもの）
   drawTableGrid(
     ctx,
     size,
@@ -979,7 +979,7 @@ function drawGrid(ctx, option, orimonoData) {
     orimonoData.monsen_char_max_y
   );
 
-  // 紋栓図文字
+  // 紋栓図
   drawTableGrid(
     ctx,
     size,
@@ -1019,7 +1019,7 @@ function drawGrid(ctx, option, orimonoData) {
     orimonoData.osawari_max_y
   );
 
-  // 引込図文字
+  // 引込図
   drawTableGrid(
     ctx,
     size,
@@ -1029,7 +1029,7 @@ function drawGrid(ctx, option, orimonoData) {
     orimonoData.hikikomi_max_y
   );
 
-  // 組織図文字
+  // 組織図
   drawTableGrid(
     ctx,
     size,
@@ -1038,63 +1038,6 @@ function drawGrid(ctx, option, orimonoData) {
     orimonoData.soshiki_max_x,
     orimonoData.soshiki_max_y
   );
-
-  // // 紋栓図縦線
-  // let monsen_x_start = orimonoData.monsen_min_x * size;
-  // let monsen_y_start = orimonoData.monsen_min_y * (orimonoData.waku_maisu + 1);
-  // let monsen_tate_length =
-  //   orimonoData.soshiki_yoko * size;
-  // let monsen_yoko_length = orimonoData.waku_maisu * size;
-  // for (let i = 0; i <= orimonoData.waku_maisu; i++) {
-  //   let x = monsen_x_start + (size * i - (i == 0 ? -0.5 : 0.5)); // 紋栓図縦1本目はcanvasの縁になるので0.5にすると見えなくなる
-  //   ctx.moveTo(x, monsen_y_start);
-  //   ctx.lineTo(x, monsen_y_start + monsen_tate_length);
-  // }
-
-  // // 紋栓図横線
-  // for (let i = 0; i <= orimonoData.soshiki_yoko; i++) {
-  //   let y = monsen_y_start + (size * i - 0.5);
-  //   ctx.moveTo(monsen_x_start, y);
-  //   ctx.lineTo(monsen_yoko_length, y);
-  // }
-
-  // // 組織図縦線
-  // let soshiki_x_start = size * (orimonoData.waku_maisu + 1);
-  // let soshiki_y_start = size * (orimonoData.waku_maisu + 1);
-  // let soshiki_tate_length =
-  //   orimonoData.soshiki_yoko * size;
-  // let soshiki_yoko_length =
-  //   orimonoData.soshiki_tate * size;
-  // for (let i = 0; i <= orimonoData.soshiki_tate; i++) {
-  //   let x = soshiki_x_start + (size * i - 0.5);
-  //   ctx.moveTo(x, soshiki_y_start);
-  //   ctx.lineTo(x, soshiki_y_start + soshiki_tate_length);
-  // }
-  // // 組織図横線
-  // for (let i = 0; i <= orimonoData.soshiki_yoko; i++) {
-  //   let y = soshiki_y_start + (size * i - 0.5);
-  //   ctx.moveTo(soshiki_x_start, y);
-  //   ctx.lineTo(soshiki_x_start + soshiki_yoko_length, y);
-  // }
-
-  // // 引込図縦線
-  // let hikikomi_x_start = size * (orimonoData.waku_maisu + 1);
-  // let hikikomi_y_start = 0;
-  // let hikikomi_tate_length =
-  //   orimonoData.waku_maisu * size;
-  // let hikikomi_yoko_length =
-  //   orimonoData.soshiki_tate * size;
-  // for (let i = 0; i <= orimonoData.soshiki_tate; i++) {
-  //   let x = hikikomi_x_start + (size * i - 0.5);
-  //   ctx.moveTo(x, hikikomi_y_start);
-  //   ctx.lineTo(x, hikikomi_y_start + hikikomi_tate_length);
-  // }
-  // // 引込図横線
-  // for (let i = 0; i <= orimonoData.waku_maisu; i++) {
-  //   let y = hikikomi_y_start + (size * i - (i == 0 ? -0.5 : 0.5)); // 引込図横1本目はcanvasの縁になるので0.5にすると見えなくなる
-  //   ctx.moveTo(hikikomi_x_start, y);
-  //   ctx.lineTo(hikikomi_x_start + hikikomi_yoko_length, y);
-  // }
 
   ctx.stroke();
 
