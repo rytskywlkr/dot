@@ -25,14 +25,15 @@
 }
 
 #editor-canvas #canvas,
-#editor-canvas #background {
+#editor-canvas #char,
+#editor-canvas #error {
 	/* border: 1px solid #AAA; */
 	position: absolute;
 	top: 0;
 	left: 0;
 }
 
-#editor-canvas #background {
+#editor-canvas #error {
 	background-color: #FFF;
 }
 

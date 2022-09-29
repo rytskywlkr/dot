@@ -13,6 +13,7 @@
     ctx,
     work,
     errorCtx,
+    charCtx,
     preview,
     selectionCtx,
     paletteData,
@@ -37,8 +38,10 @@
   };
   const option = {};
   option.scales = [1, 2, 4, 6, 8, 12, 16, 20, 24];
+  option.fontSizes = [1, 2, 4, 6, 8, 12, 16, 14, 24];
   option.zoom = 7;
   option.scale = option.scales[option.zoom];
+  option.fontSize = option.fontSizes[option.zoom];
   option.gridOn = true;
   option.grid = {
     color0: '#808080',
@@ -191,6 +194,7 @@
 
   function getCanvasWidth() {
     // canvasの横幅は、枠枚数＋１（空白列）＋組織図の経糸本数をスケールで掛ける
+    console.log('devicePixelRatio' + devicePixelRatio);
     let width = orimonoData.soshiki_max_x * option.scale + 1; // translateで開始位置をX,Yとも1ずらして線が消えないようにしているのでキャンバスサイズも+1px
     return width;
   }
@@ -202,6 +206,10 @@
   }
   // キャンバスをリサイズする
   function resize() {
+    // canvas上で文字がぼやけるのを防ぐために利用する
+    // https://qiita.com/udoP_/items/bba03df1825023fba63b
+    let ratio = window.devicePixelRatio;
+
     canvas.width = getCanvasWidth();
     canvas.height = getCanvasHeight();
     option.canvasWidth = canvas.width;
@@ -210,12 +218,18 @@
     work.canvas.height = canvas.height;
     errorCtx.canvas.width = canvas.width;
     errorCtx.canvas.height = canvas.height;
+    charCtx.canvas.width = canvas.width * ratio; // canvas上で文字がぼやけるのを防ぐ
+    charCtx.canvas.height = canvas.height * ratio; // canvas上で文字がぼやけるのを防ぐ
 
     // editor-canvasにもheightを指定することでselectionCtxをbottomから指定できるようにする（widthはついで）
-    document.getElementById('editor-canvas').style.width = canvas.width + 'px';
-    document.getElementById('editor-canvas').style.height =
-      canvas.height + 'px';
+    let canvasWidth = canvas.width + 'px';
+    let canvasHeight = canvas.height + 'px';
+    document.getElementById('editor-canvas').style.width = canvasWidth;
+    document.getElementById('editor-canvas').style.height = canvasHeight;
 
+    // 文字がにじむのでcanvaサイズを指定する
+    document.getElementById('char').style.width = canvasWidth;
+    document.getElementById('char').style.height = canvasHeight;
     for (let i = 0; i < Layer.count(); i++) {
       let layer = Layer.get(i).canvas;
       layer.width = canvas.width;
@@ -229,6 +243,8 @@
     errorCtx.scale(1, -1); // 上記に伴いY軸の図り方を反転
     selectionCtx.translate(1, canvas.height - 1); // 原点を左下に移動
     selectionCtx.scale(1, -1); // 上記に伴いY軸の図り方を反転
+    // charCtx.translate(ratio, canvas.height * ratio - 1); // 文字が反転してしまうので利用しない
+    charCtx.scale(ratio, ratio); // canvas上で文字がぼやけるのを防ぐ
   }
 
   function zoom() {
@@ -374,14 +390,6 @@
 
   // keymap登録
   const keymap = [
-    { key: 'Z', f: zoomIn, name: '拡大' },
-    { key: 'X', f: zoomOut, name: '縮小' },
-    { key: 'C', f: zoomDefault, name: '等倍' },
-    { key: 'P', f: selectTool('pen'), name: 'ペン' },
-    { key: 'L', f: selectTool('line'), name: '直線' },
-    { key: 'R', f: selectTool('rect'), name: '矩形' },
-    { key: 'F', f: selectTool('paint'), name: '塗りつぶし' },
-    { key: 'M', f: selectTool('select'), name: '範囲選択' },
     { key: 'Shift+3', f: toggleGrid, name: 'グリッド' },
     { key: 'Ctrl+Z', f: undo, name: '元に戻す' },
     { key: 'ARROWUP', f: arrow('up'), name: '上に1つ移動' },
@@ -392,41 +400,49 @@
     { key: '.', f: draw('clear'), name: 'クリア' },
   ];
 
-  KeyMapper.assign('Z', zoomIn);
-  KeyMapper.assign('X', zoomOut);
-  KeyMapper.assign('C', zoomDefault);
-  KeyMapper.assign('P', toggleTool('pen'));
-  KeyMapper.assign('L', toggleTool('line'));
-  KeyMapper.assign('F', toggleTool('paint'));
-  KeyMapper.assign('R', toggleTool('rect'));
+
   KeyMapper.assign('Ctrl+Z', undo);
   KeyMapper.assign('Ctrl+Y', redo);
-  KeyMapper.assign('M', toggleTool('select'));
-  KeyMapper.assign('H', () => {
-    shiftH(ctx, orimonoData, 1, option.scale);
-  });
-  KeyMapper.assign('V', () => {
-    shiftV(ctx, orimonoData, 1, option.scale);
-  });
-  KeyMapper.assign('Ctrl+A', selectAll);
-  // 選択範囲の解除
-  KeyMapper.assign('Ctrl+D', deselect);
-  KeyMapper.assign('Shift+3', toggleGrid);
-  KeyMapper.assign('Ctrl+S', () => {
-    saveStorage('0');
-  });
-  KeyMapper.assign('Ctrl+L', () => {
-    loadStorage('0');
-  });
-  KeyMapper.assign('O', toggleTool('outline'));
+
   KeyMapper.assign('ARROWUP', arrow('up'));
   KeyMapper.assign('ARROWDOWN', arrow('down'));
   KeyMapper.assign('ARROWLEFT', arrow('left'));
   KeyMapper.assign('ARROWRIGHT', arrow('right'));
   KeyMapper.assign(',', draw('draw'));
   KeyMapper.assign('.', draw('clear'));
+  KeyMapper.assign('DRAWCHAR', drawChar());
   KeyMapper.bind(document, 'trigger');
 
+  function drawChar() {
+    return (char) => {
+      if (
+        selection.type == 'monsen-char' ||
+        selection.type == 'hikikomi-char'
+      ) {
+        charCtx.clearRect(
+          selection.region.x * option.scale + 5,
+          charCtx.canvas.height / 2 - selection.region.y * option.scale - 5,
+          option.scale,
+          -option.scale
+        );
+        charCtx.font = option.fontSize + 'px sans-serif';
+        charCtx.fillText(
+          char,
+          selection.region.x * option.scale + 5,
+          charCtx.canvas.height / 2 - selection.region.y * option.scale - 5
+        );
+        if (selection.type == 'monsen-char') {
+          orimonoData.monsen_char_data[
+            selection.region.y - orimonoData.monsen_char_min_y
+          ] = char;
+        } else {
+          orimonoData.hikikomi_char_data[
+            selection.region.x - orimonoData.hikikomi_char_min_x
+          ] = char;
+        }
+      }
+    };
+  }
   function arrow(direction) {
     return () => {
       if (direction == 'up') {
@@ -485,8 +501,11 @@
     // 選択範囲のレイヤーを作成
     selectionCtx = document.getElementById('selection').getContext('2d');
 
+    // 文字用レイヤー（translateすると文字が反転するのでしない）
+    charCtx = document.getElementById('char').getContext('2d');
+
     // エラー用レイヤー
-    errorCtx = document.getElementById('background').getContext('2d');
+    errorCtx = document.getElementById('error').getContext('2d');
 
     // パレットデータの作成
     paletteData = createPaletteData(256);
@@ -908,6 +927,7 @@
   // 右クリック
   $.bind($('work'), 'contextmenu', (e) => {
     record();
+    deselect();
     let r = work.canvas.getBoundingClientRect();
     left = window.scrollX + r.left;
     top = window.scrollY + r.top;
@@ -945,13 +965,6 @@
       // 最初に選択(down)した場所が組織図、紋栓図、引込図のどれかを判断
       // ドラッグ(move)した際に組織図、紋栓図、引込図の範囲を超えさせないために必要
       selection.type = getArea(x, y, orimonoData);
-
-      selectionCtx.clearRect(
-        0,
-        0,
-        selectionCtx.canvas.width,
-        selectionCtx.canvas.height
-      );
 
       $.hide($selection);
       $.position(
@@ -1546,7 +1559,6 @@
       let temp = copyOrimonoData(orimonoData);
       tempData.push(temp);
     }
-
     return diff;
   }
 
@@ -1623,9 +1635,16 @@
 
   // 選択解除
   function deselect() {
+    selectionCtx.clearRect(
+      0,
+      0,
+      selectionCtx.canvas.width,
+      selectionCtx.canvas.height
+    );
+    $.hide($selection);
+
     if (!selection.enable) return;
     selection.enable = false;
-    $.hide($selection);
 
     if (selection.type == 'soshiki') {
       for (let i = 0; i < selection.selectionData.length; i++) {

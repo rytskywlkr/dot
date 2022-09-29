@@ -190,17 +190,11 @@ function drawDotOrimono(ctx, x, y, orimonoData, paletteIndex, option) {
     orimonoData.monsen_color_data[x - orimonoData.monsen_color_min_x] =
       paletteIndex;
   } else if (type == 'monsen-char') {
-    drawDot(ctx, x, y, option.scale);
-    orimonoData.monsen_char_data[x - orimonoData.monsen_char_min_x] =
-      paletteIndex;
   } else if (type == 'hikikomi-color') {
     drawDot(ctx, x, y, option.scale);
     orimonoData.hikikomi_color_data[x - orimonoData.hikikomi_color_min_x] =
       paletteIndex;
   } else if (type == 'hikikomi-char') {
-    drawDot(ctx, x, y, option.scale);
-    orimonoData.hikikomi_char_data[x - orimonoData.hikikomi_char_min_x] =
-      paletteIndex;
   } else {
     // 上記以外の場所がクリックされてもドットは描画しない
   }
