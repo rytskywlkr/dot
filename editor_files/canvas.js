@@ -1299,21 +1299,23 @@ function drawImage(ctx, image, dx, dy, dw, dh) {
 }
 
 // 水平方向反転
-function flipH(ctx, orimonoData, palette, option, paletteData) {
+function flipH(ctx, charCtx, orimonoData, palette, option, paletteData) {
   orimonoData.soshiki_data.reverse();
-  drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
+
+  console.log(orimonoData);
+  drawOrimonoData(ctx, charCtx, orimonoData, palette, option, paletteData);
 }
 
 // 垂直方向反転
-function flipV(ctx, orimonoData, palette, option, paletteData) {
+function flipV(ctx, charCtx, orimonoData, palette, option, paletteData) {
   for (let i = 0; i < orimonoData.soshiki_data.length; i++) {
     orimonoData.soshiki_data[i].reverse();
   }
-  drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
+  drawOrimonoData(ctx, charCtx, orimonoData, palette, option, paletteData);
 }
 
 // 右90度回転
-function rotate90R(ctx, orimonoData, palette, option, paletteData) {
+function rotate90R(ctx, charCtx, orimonoData, palette, option, paletteData) {
   let soshiki_temp = Array(orimonoData.soshiki_yoko);
   for (let i = 0; i < soshiki_temp.length; i++) {
     soshiki_temp[i] = Array(orimonoData.soshiki_tate);
@@ -1328,18 +1330,25 @@ function rotate90R(ctx, orimonoData, palette, option, paletteData) {
     }
   }
   orimonoData.soshiki_data = soshiki_temp;
-  drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
+  drawOrimonoData(ctx, charCtx, orimonoData, palette, option, paletteData);
 }
 
 // 裏返し
-function reverseSoshiki(ctx, orimonoData, palette, option, paletteData) {
+function reverseSoshiki(
+  ctx,
+  charCtx,
+  orimonoData,
+  palette,
+  option,
+  paletteData
+) {
   for (let i = 0; i < orimonoData.soshiki_data.length; i++) {
     for (let j = 0; j < orimonoData.soshiki_data[i].length; j++) {
       orimonoData.soshiki_data[i][j] =
         orimonoData.soshiki_data[i][j] == 0 ? 1 : 0;
     }
   }
-  drawOrimonoData(ctx, orimonoData, palette, option, paletteData);
+  drawOrimonoData(ctx, charCtx, orimonoData, palette, option, paletteData);
 }
 
 // 指定のインデックスのピクセルを透明にする

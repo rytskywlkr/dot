@@ -279,13 +279,6 @@
     }
   }
 
-  // 等倍
-  function zoomDefault() {
-    deselect();
-    option.zoom = 0;
-    zoom();
-  }
-
   // グリッドの表示
   function grid() {
     if (option.gridOn) {
@@ -320,7 +313,7 @@
     clearCanvas(selectionCtx);
     deselect();
     record();
-    flipV(ctx, orimonoData, palette, option, paletteData);
+    flipV(ctx, charCtx, orimonoData, palette, option, paletteData);
     drawPreview();
   }
 
@@ -331,7 +324,7 @@
     clearCanvas(selectionCtx);
     deselect();
     record();
-    flipH(ctx, orimonoData, palette, option, paletteData);
+    flipH(ctx, charCtx, orimonoData, palette, option, paletteData);
     drawPreview();
   }
 
@@ -342,7 +335,7 @@
     clearCanvas(selectionCtx);
     deselect();
     record();
-    rotate90R(ctx, orimonoData, palette, option, paletteData);
+    rotate90R(ctx, charCtx, orimonoData, palette, option, paletteData);
     drawPreview();
   }
 
@@ -353,7 +346,7 @@
     clearCanvas(selectionCtx);
     deselect();
     record();
-    reverseSoshiki(ctx, orimonoData, palette, option, paletteData);
+    reverseSoshiki(ctx, charCtx, orimonoData, palette, option, paletteData);
     drawPreview();
   }
 
@@ -391,7 +384,8 @@
   // keymap登録
   const keymap = [
     { key: 'Shift+3', f: toggleGrid, name: 'グリッド' },
-    { key: 'Ctrl+Z', f: undo, name: '元に戻す' },
+    { key: 'Ctrl+Z', f: undo, name: 'もとに戻す' },
+    { key: 'Ctrl+Y', f: redo, name: 'やり直し' },
     { key: 'ARROWUP', f: arrow('up'), name: '上に1つ移動' },
     { key: 'ARROWDOWN', f: arrow('down'), name: '下に1つ移動' },
     { key: 'ARROWLEFT', f: arrow('left'), name: '左に1つ移動' },
@@ -496,13 +490,6 @@
         );
       }
     };
-  }
-
-  function createImage(w, h) {
-    option.imageWidth = orimonoData.soshiki_tate + orimonoData.waku_maisu + 1;
-    option.imageHeight = orimonoData.soshiki_yoko + orimonoData.waku_maisu + 1;
-    orimonoData = createOrimonoData(option.imageWidth, option.imageHeight);
-    return orimonoData;
   }
 
   function initEditor() {
@@ -613,19 +600,13 @@
   $.bind($('grid'), 'click', toggleGrid);
   $.bind($('undo'), 'click', undo);
   $.bind($('redo'), 'click', redo);
-  $.bind($('paint'), 'click', toggleTool('paint'));
   $.bind($('pen'), 'click', toggleTool('pen'));
-  $.bind($('line'), 'click', toggleTool('line'));
-  $.bind($('rect'), 'click', toggleTool('rect'));
-  $.bind($('frect'), 'click', toggleTool('frect'));
-  $.bind($('ellipse'), 'click', toggleTool('ellipse'));
-  $.bind($('fellipse'), 'click', toggleTool('fellipse'));
   $.bind($('select'), 'click', toggleTool('select'));
   $.bind($('copy'), 'click', paste);
   $.bind($('clear'), 'click', clear);
   $.bind($('flipv'), 'click', flipVert);
   $.bind($('fliph'), 'click', flipHorz);
-  $.bind($('rotater'), 'click', rotateRight);
+  $.bind($('rotate'), 'click', rotateRight);
   $.bind($('reverse'), 'click', reverse);
 
   // スポイトツール
