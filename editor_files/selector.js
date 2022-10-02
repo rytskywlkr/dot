@@ -28,6 +28,11 @@
     e.style.display !== 'none' ? $.hide(e) : $.show(e);
   };
 
+  $.positionTop = (e, x, y) => {
+    e.style.left = x + 'px';
+    e.style.top = y + 'px';
+  };
+
   $.position = (e, x, y) => {
     e.style.left = x + 'px';
     e.style.bottom = y + 'px';

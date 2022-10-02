@@ -33,6 +33,7 @@
 		integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
 	<link rel="stylesheet"
 		href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" />
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 	<link rel="stylesheet" href="//fonts.googleapis.com/earlyaccess/notosansjapanese.css">
 	<style>
@@ -197,72 +198,27 @@
 					<p>カラーパレット</p>
 
 					<div id="palette-content">
-
-						<ul id="palette-tools-2" style="display: none;">
-							<li id="palette-grad"><span title="グラーデーション作成"></span></li>
-							<li id="palette-transparent"><span title="透明色の指定"></span></li>
-							<li id="palette-hex"><img src="./editor_files/palette_hex_icon.png" title="16進数表記"></li>
-						</ul>
-						<table cellspacing="0">
-							<tbody>
-								<tr>
-									<td title="#FFFFFF" class="" style="background-color: rgb(255, 255, 255);"></td>
-									<td title="#000000" class="selected" style="background-color: rgb(0, 0, 0);"></td>
-									<td title="#FF0000" style="background-color: rgb(255, 0, 0);"></td>
-									<td title="#00FF00" style="background-color: rgb(0, 255, 0);"></td>
-									<td title="#0000FF" style="background-color: rgb(0, 0, 255);"></td>
-									<td title="#FFFF00" style="background-color: rgb(255, 255, 0);"></td>
-									<td title="#FF00FF" style="background-color: rgb(255, 0, 255);"></td>
-									<td title="#00FFFF" style="background-color: rgb(0, 255, 255);"></td>
-									<td title="#808080" style="background-color: rgb(128, 128, 128);"></td>
-									<td title="#FF8080" style="background-color: rgb(255, 128, 128);"></td>
-									<td title="#80FF80" style="background-color: rgb(128, 255, 128);"></td>
-									<td title="#8080FF" style="background-color: rgb(128, 128, 255);"></td>
-									<td title="#FFFF80" style="background-color: rgb(255, 255, 128);"></td>
-									<td title="#80FFFF" style="background-color: rgb(128, 255, 255);"></td>
-									<td title="#FF80FF" style="background-color: rgb(255, 128, 255);"></td>
-									<td title="#000000" style="background-color: rgb(0, 0, 0);"></td>
-								</tr>
-							</tbody>
-						</table>
-						<div id="front-color" style="background-color: rgb(0, 0, 0);"></div>
-
-						<div id="color-controller">
-							<div class="color-num">
-								<label for="color-num-r">R</label><span class="color-bar" id="r-bar" for="color-num-r"
-									style="background: -webkit-linear-gradient(left, rgb(0, 0, 0), rgb(255, 0, 0));"><span
-										style="left: -2px;"></span></span><span class="left" for="color-num-r" step="-1"></span><input
-									id="color-num-r" type="text" min="0" max="255" radix="10"><span class="right" for="color-num-r"
-									step="1"></span>
-							</div>
-							<div class="color-num">
-								<label for="color-num-g">G</label><span class="color-bar" id="g-bar" for="color-num-g"
-									style="background: -webkit-linear-gradient(left, rgb(0, 0, 0), rgb(0, 255, 0));"><span
-										style="left: -2px;"></span></span><span class="left" for="color-num-g" step="-1"></span><input
-									id="color-num-g" type="text" min="0" max="255" radix="10"><span class="right" for="color-num-g"
-									step="1"></span>
-							</div>
-							<div class="color-num">
-								<label for="color-num-b">B</label><span class="color-bar" id="b-bar" for="color-num-b"
-									style="background: -webkit-linear-gradient(left, rgb(0, 0, 0), rgb(0, 0, 255));"><span
-										style="left: -2px;"></span></span><span class="left" for="color-num-b" step="-1"></span><input
-									id="color-num-b" type="text" min="0" max="255" radix="10"><span class="right" for="color-num-b"
-									step="1"></span>
-							</div>
+						<div id="palette-table">
+							<div class="palette-color" title="#FFFFFF" style="background-color: rgb(255, 255, 255);"></div>
+							<div class="palette-color" title="#000000" style="background-color: rgb(0, 0, 0);"></div>
+							<div class="palette-color" title="#FF0000" style="background-color: rgb(255, 0, 0);"></div>
+							<div class="palette-color" title="#00FF00" style="background-color: rgb(0, 255, 0);"></div>
+							<div class="palette-color" title="#0000FF" style="background-color: rgb(0, 0, 255);"></div>
+							<div class="palette-color" title="#FFFF00" style="background-color: rgb(255, 255, 0);"></div>
+							<div class="palette-color" title="#FF00FF" style="background-color: rgb(255, 0, 255);"></div>
+							<div class="palette-color" title="#00FFFF" style="background-color: rgb(0, 255, 255);"></div>
+							<div class="palette-color" title="#808080" style="background-color: rgb(128, 128, 128);"></div>
+							<div class="palette-color" title="#FF8080" style="background-color: rgb(255, 128, 128);"></div>
+							<div class="palette-color" title="#80FF80" style="background-color: rgb(128, 255, 128);"></div>
+							<div class="palette-color" title="#8080FF" style="background-color: rgb(128, 128, 255);"></div>
+							<div class="palette-color" title="#FFFF80" style="background-color: rgb(255, 255, 128);"></div>
+							<div class="palette-color" title="#80FFFF" style="background-color: rgb(128, 255, 255);"></div>
+							<div class="palette-color" title="#FF80FF" style="background-color: rgb(255, 128, 255);"></div>
 						</div>
 					</div>
 				</div>
 				<div id="view" class="widget" style="left: 653px; top: 380px;">
 					<p>View</p><canvas width="32" height="32"></canvas>
-				</div>
-				<div id="color-picker" class="widget" style="display:none;">
-					<p>Color</p>
-					<div id="color-picker-map"><img src="./editor_files/color.png" id="color"><span
-							id="color-picker-cursor"></span></div>
-					<div id="hue"><img src="./editor_files/hue.png"><span id="hue-cursor"></span></div>
-					<!-- <form><input type="text" value="#AAAAAA" /></form> -->
-					<form><label id="color-picker-h">H:0</label><label id="color-picker-s">S:50%</label><label
-							id="color-picker-v">V:50%</label></form>
 				</div>
 				<div id="layers" class="widget" style="display: none; left: 653px; top: 460px;">
 					<p>Layers</p>

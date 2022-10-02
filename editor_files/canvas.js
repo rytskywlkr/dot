@@ -123,13 +123,14 @@ function getArea(x, y, orimonoData) {
 
 // ドットの表示
 function drawDotOrimono(ctx, x, y, orimonoData, paletteIndex, option) {
+  let blackIndex = 1; // 黒塗り項目用（紋栓色、引込色以外はこれ）
   let type = getArea(x, y, orimonoData);
   if (type == 'soshiki') {
     // 組織図にドットを描画する
     // 組織図の場合は1つのドットではなく、基本サイズ毎の同じ座標にドットを描画する必要がある
     orimonoData.soshiki_data[x - orimonoData.soshiki_min_x][
       y - orimonoData.soshiki_min_y
-    ] = paletteIndex;
+    ] = blackIndex;
     let dot_at_kihon_x = 0,
       dot_at_kihon_y = 0;
     for (let i = 0; i < orimonoData.kihon_data.length; i++) {
@@ -153,7 +154,7 @@ function drawDotOrimono(ctx, x, y, orimonoData, paletteIndex, option) {
       // 基本図の一番左下からみた座標（上記から枠枚数と空白1を減算）
       let x_at_soshiki = x_at_all - orimonoData.soshiki_min_x;
       let y_at_soshiki = y_at_all - orimonoData.soshiki_min_y;
-      orimonoData.soshiki_data[x_at_soshiki][y_at_soshiki] = paletteIndex;
+      orimonoData.soshiki_data[x_at_soshiki][y_at_soshiki] = blackIndex;
     }
   } else if (type == 'monsen') {
     // 紋栓図にドットを描画する
@@ -161,7 +162,7 @@ function drawDotOrimono(ctx, x, y, orimonoData, paletteIndex, option) {
     drawDot(ctx, x, y, option.scale);
     orimonoData.monsen_data[x - orimonoData.monsen_min_x][
       y - orimonoData.monsen_min_y
-    ] = paletteIndex;
+    ] = blackIndex;
   } else if (type == 'hikikomi') {
     // 引込図にドットを描画する
     // 引込図の場合は1列に1ドットと決まっているので、列のドットをクリアしてからドットを描画する
@@ -176,17 +177,17 @@ function drawDotOrimono(ctx, x, y, orimonoData, paletteIndex, option) {
     drawDot(ctx, x, y, option.scale);
     orimonoData.hikikomi_data[x - orimonoData.hikikomi_min_x][
       y - orimonoData.hikikomi_min_y
-    ] = paletteIndex;
+    ] = blackIndex;
   } else if (type == 'osawari') {
     drawDot(ctx, x, y, option.scale);
-    orimonoData.osawari_data[x - orimonoData.osawari_min_x] = paletteIndex;
+    orimonoData.osawari_data[x - orimonoData.osawari_min_x] = blackIndex;
   } else if (type == 'monsen-color') {
-    drawDot(ctx, x, y, option.scale);
+    drawDot(ctx, x, y, option.scale, 1, paletteIndex);
     orimonoData.monsen_color_data[x - orimonoData.monsen_color_min_x] =
       paletteIndex;
   } else if (type == 'monsen-char') {
   } else if (type == 'hikikomi-color') {
-    drawDot(ctx, x, y, option.scale);
+    drawDot(ctx, x, y, option.scale, 1, paletteIndex);
     orimonoData.hikikomi_color_data[x - orimonoData.hikikomi_color_min_x] =
       paletteIndex;
   } else if (type == 'hikikomi-char') {
@@ -260,7 +261,8 @@ function selectDot(ctx, x, y, scale, padding = 1) {
 }
 
 // ドットの表示
-function drawDot(ctx, x, y, scale, padding = 1) {
+function drawDot(ctx, x, y, scale, padding = 1, paletteIndex = 1) {
+  ctx.fillStyle = Palette.getColorByIndex(paletteIndex);
   let s = scale,
     b = s - padding;
   ctx.fillRect(x * s + padding, y * s - padding, b, b);
@@ -1191,6 +1193,36 @@ function drawOrimonoData(
       );
     }
   }
+
+  // 紋栓色を描画
+  for (let y = 0; y < orimonoData.monsen_color_data.length; y++) {
+    let paletteIndex = orimonoData.monsen_color_data[y];
+    if (paletteIndex !== undefined) {
+      drawDot(
+        ctx,
+        orimonoData.monsen_color_min_x,
+        y + orimonoData.monsen_color_min_y,
+        option.scale,
+        1,
+        paletteIndex
+      );
+    }
+  }
+
+  // 引込色を描画
+  for (let x = 0; x < orimonoData.hikikomi_color_data.length; x++) {
+    let paletteIndex = orimonoData.hikikomi_color_data[x];
+    if (paletteIndex !== undefined) {
+      drawDot(
+        ctx,
+        x + orimonoData.hikikomi_color_min_x,
+        orimonoData.hikikomi_color_min_y,
+        option.scale,
+        1,
+        paletteIndex
+      );
+    }
+  }
 }
 
 // 範囲指定してインデックスカラーイメージを描画する
@@ -1301,8 +1333,6 @@ function drawImage(ctx, image, dx, dy, dw, dh) {
 // 水平方向反転
 function flipH(ctx, charCtx, orimonoData, palette, option, paletteData) {
   orimonoData.soshiki_data.reverse();
-
-  console.log(orimonoData);
   drawOrimonoData(ctx, charCtx, orimonoData, palette, option, paletteData);
 }
 

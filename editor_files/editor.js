@@ -187,7 +187,6 @@
   function drawPreview() {
     preview.canvas.width = 84;
     preview.canvas.height = 84;
-    Palette.convert(paletteData);
     // TODOプレビューはちゃんと作り込みが必要
     // drawOrimonoData(preview, orimonoData, paletteData, 1);
   }
@@ -281,9 +280,9 @@
 
   // グリッドの表示
   function grid() {
-    if (option.gridOn) {
-      drawGrid(work, option, orimonoData);
-    }
+      if (option.gridOn) {
+        drawGrid(work, option, orimonoData);
+      }
   }
 
   // グリッドの表示切替
@@ -350,19 +349,6 @@
     drawPreview();
   }
 
-  function selectAll() {
-    let r = selection.region;
-    toggleTool('select')();
-    $.position($selection, 0, 0);
-    $.size($selection, ctx.canvas.width, ctx.canvas.height);
-    r.x = 0;
-    r.y = 0;
-    r.w = getCanvasWidth();
-    r.h = getCanvasHeight();
-    selection.enable = true;
-    $.show($selection);
-  }
-
   function shift(x, y) {
     if (selection.enable) {
       if (x !== 0) shiftH(selectionCtx, selection.orimonoData, x, option.scale);
@@ -373,12 +359,6 @@
       if (y !== 0) shiftV(ctx, orimonoData, y, option.scale);
       drawPreview();
     }
-  }
-
-  function selectTool(t) {
-    return () => {
-      tool = t;
-    };
   }
 
   // keymap登録
@@ -472,12 +452,13 @@
       if (selection.type == null || selection.type == 'other') return;
       clearCanvas(selectionCtx);
       if (draw == 'draw') {
+        let = paletteIndex = Palette.getColorIndex();
         drawDotOrimono(
           ctx,
           selection.region.x,
           selection.region.y,
           orimonoData,
-          1,
+          paletteIndex,
           option
         );
       } else {
@@ -506,9 +487,6 @@
 
     // エラー用レイヤー
     errorCtx = document.getElementById('error').getContext('2d');
-
-    // パレットデータの作成
-    paletteData = createPaletteData(256);
   }
 
   let hash = location.hash.slice(1),
@@ -538,14 +516,6 @@
 
   if (typeof Palette !== 'undefined') {
     Palette.create('palette');
-    Palette.setColorPicker((e) => {
-      $.toggle($('color-picker'));
-      const color = Color.strToRGB(Palette.getFrontColor());
-      ColorPicker.setColor(color);
-    });
-    ColorPicker('color-picker', (c) => {
-      Palette.setColor(Color.rgb(c[0], c[1], c[2]));
-    });
   }
 
   if (typeof Widget !== 'undefined') {
@@ -563,8 +533,8 @@
   let left = canvas.getBoundingClientRect().left,
     top = canvas.getBoundingClientRect().top;
 
-  $.position($('palette'), left + 420, top + 4);
-  $.position($('view'), left + 420, top + 300);
+  $.positionTop($('palette'), left + 420, top + 4);
+  $.positionTop($('view'), left + 420, top + 300);
   $.hide($('palette'));
   $.hide($('view'));
   $.show($('overlay'));
@@ -580,9 +550,8 @@
       orimonoData.width,
       orimonoData.height
     );
-    Palette.setPaletteData(paletteData, true);
-    Palette.setFrontColor(0);
-    palette = Palette.getPaletteData();
+    Palette.setColor(0);
+    // palette = Palette.getPaletteData();
     resize();
     drawOrimonoData(ctx, charCtx, orimonoData, palette, option, paletteData);
     grid();
@@ -652,12 +621,7 @@
     $.toggle($('layers'));
     $('layer').classList.toggle('selected');
   });
-  // $.bind($('scroll'), 'click', e => {
-  // 	$('scroll').classList.toggle('selected');
-  // 	scroll = !scroll;
-  // 	if (scroll) {
-  // 	}
-  // });
+
   $.bind($('tone'), 'click', toggleTool('tone'));
   $.bind($('transparent'), 'click', () => {
     $('transparent').classList.toggle('selected');
@@ -850,7 +814,6 @@
       }
 
       selection.orimonoData = createOrimonoData(data.width, data.height);
-      Palette.setPaletteData(palette, true);
       resize();
       ctx.fillStyle = palette[0];
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -876,9 +839,6 @@
       '#FF80FF',
     ];
 
-    Palette.setPaletteData(palette, false);
-    Palette.convert(paletteData);
-
     // selection.orimonoData = createImage(32, 32, 2);
     resize();
     ctx.fillStyle = palette[0];
@@ -890,7 +850,6 @@
 
   Palette.change((e) => {
     // パレットが変更された際のイベント
-    Palette.convert(paletteData);
     for (let i = 0; i < Layer.count(); i++) {
       let layer = Layer.get(i);
       if (e !== undefined) {
@@ -910,13 +869,12 @@
     drawPreview();
   });
 
-  Palette.setFrontColor(1);
-  palette = Palette.getPaletteData();
+  Palette.setColor(1);
+  // palette = Palette.getPaletteData();
 
   $.bind($('palette-opt'), 'click', () => {
     record();
     removeUnusedColor(orimonoData, paletteData);
-    Palette.setPaletteData(paletteData, true);
   });
 
   // 右クリック
@@ -1056,92 +1014,35 @@
     points[0] = ((work.canvas.height - (e.pageY - top)) / option.scale) ^ 0;
     points[1] = ((e.pageX - left) / option.scale) ^ 0;
 
-    if (e.altKey) {
-      // スポイト
-      paletteIndex =
-        orimonoData.data[points[0] * orimonoData.width + points[1]];
-      Palette.setFrontColor(paletteIndex);
-    } else if (dropper) {
-      paletteIndex =
-        orimonoData.data[points[0] * orimonoData.width + points[1]];
-      Palette.setFrontColor(paletteIndex);
-
-      // ツールアイコンをもとに戻す
-      if (dropper) {
-        activeTool && activeTool.classList.remove('selected');
-        activeTool = prevTool;
-        activeTool.classList.add('selected');
-        // 選択範囲解除
-        if (tool !== 'select') {
-          deselect();
-        }
-        dropper = false;
-      }
-    } else if (e.shiftKey) {
+    if (e.shiftKey) {
       // スクロール
     } else if (e.button === 0) {
+      $.hide($('palette'));
       record();
-      paletteIndex = Palette.getFrontIndex();
-      ctx.fillStyle = Palette.getFrontColor();
-
-      if (paletteIndex === Palette.getTransparentIndex()) {
-        ctx.globalCompositeOperation = 'destination-out';
-      } else {
-        ctx.globalCompositeOperation = 'source-over';
-      }
-
-      work.fillStyle = ctx.fillStyle;
+      paletteIndex = Palette.getColorIndex();
       switch (tool) {
         case 'pen':
           down = true;
-          drawDotOrimono(ctx, points[1], points[0], orimonoData, 1, option);
+          drawDotOrimono(
+            ctx,
+            points[1],
+            points[0],
+            orimonoData,
+            paletteIndex,
+            option
+          );
           selectHandler.down(points[1], points[0]);
           selectHandler.up(false);
-
-          break;
-        case 'paint':
-          paint(
-            ctx,
-            points[1],
-            points[0],
-            orimonoData,
-            paletteIndex,
-            option.scale
-          );
-          break;
-        case 'outline':
-          drawOutline(
-            ctx,
-            points[1],
-            points[0],
-            orimonoData,
-            paletteIndex,
-            option.scale
-          );
-          break;
-        case 'line':
-        case 'rect':
-        case 'frect':
-          drawDot(work, points[1], points[0], option.scale);
-        case 'ellipse':
-        case 'fellipse':
-          down = true;
+          let type = getArea(points[1], points[0], orimonoData);
+          if (type == 'monsen-color' || type == 'hikikomi-color') {
+            $.show($('palette'));
+          }
           break;
         case 'select':
         case 'move':
           selectHandler.transparent = e.ctrlKey;
           selectHandler.down(points[1], points[0]);
           down = true;
-          break;
-        case 'tone':
-          paintTone(
-            ctx,
-            points[1],
-            points[0],
-            orimonoData,
-            paletteIndex,
-            option.scale
-          );
           break;
         default:
       }
@@ -1403,6 +1304,7 @@
   });
 
   $.bind($('selection'), 'contextmenu', (e) => {
+    deselect();
     e.preventDefault();
     e.stopPropagation();
     return false;
@@ -1524,10 +1426,9 @@
         orimonoData.width,
         orimonoData.height
       );
-      Palette.setPaletteData(paletteData, true);
-      Palette.setFrontColor(0);
+      Palette.setColor(0);
       Palette.setTransparentIndex(data.transparent);
-      palette = Palette.getPaletteData();
+      // palette = Palette.getPaletteData();
       zoom();
       grid();
       drawPreview();
@@ -1703,7 +1604,6 @@
 
   // サブウィンドウから呼び出すための関数
   global.getImage = () => {
-    Palette.convert(paletteData);
     return {
       orimonoData: orimonoData,
       paletteData: paletteData,
