@@ -9,7 +9,8 @@ a {
 	color: #0AF;
 }
 
-a:hover, a:focus {
+a:hover,
+a:focus {
 	text-decoration: underline;
 }
 
@@ -40,11 +41,10 @@ body {
 	background-color: #FFF;
 }
 
-#header {
-}
+#header {}
 
 #header h1 {
-	
+
 	font-size: 20pt;
 	font-family: 'Noto Sans Japanese', sans-serif;
 }
@@ -63,7 +63,7 @@ body {
 }
 
 #search input[type="submit"] {
-/*	margin-left: 30px;*/
+	/*	margin-left: 30px;*/
 	text-indent: -9999px;
 	width: 24px;
 	height: 24px;
@@ -136,7 +136,7 @@ body {
 	-webkit-user-select: none;
 	background-repeat: no-repeat;
 	text-align: center;
-	
+
 	cursor: pointer;
 	background-image: linear-gradient(#FFF, #FFF 25%, #F7F7F7);
 	border: 1px solid #CCC;
@@ -153,8 +153,40 @@ body {
 	border: 1px solid #CCC;
 	border-radius: 3px;
 	box-shadow: rgba(255, 255, 255, 0.2) 0 1px 0 0 inset, rgba(0, 0, 0, 0.1) 0 1px 2px 0;
-	
 	width: 22px;
 	text-align: center;
 	cursor: pointer;
+}
+
+.print-only {
+	visibility: hidden;
+	/* プリントを押すと縦スクロールが伸びてしまう対策 */
+	height: 0px;
+	overflow-y: hidden;
+}
+
+@media print {
+
+	/* @page {
+			size: A4 landscape;
+			margin: 0mm;
+		} */
+	body {
+		overflow-y: visible;
+		overflow-x: visible;
+	}
+
+	.no-print {
+		display: none;
+	}
+
+	.print-only {
+		visibility: visible;
+		overflow-y: visible;
+	}
+
+	img {
+		height: auto;
+		width: 100%;
+	}
 }

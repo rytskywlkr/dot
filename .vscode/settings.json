@@ -1,4 +1,5 @@
 {
   "vetur.format.defaultFormatter.css": "prettier",
-  "vetur.format.defaultFormatter.html": "js-beautify-html"
+  "vetur.format.defaultFormatter.html": "js-beautify-html",
+  "editor.defaultFormatter": "vscode.css-language-features"
 }

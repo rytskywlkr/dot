@@ -113,7 +113,6 @@
   // 描画状態
   const context = {
     paletteIndex: 1,
-    layers: [],
     tool: 'pen',
     prevTool: 'pen',
     dropper: false,
@@ -173,7 +172,6 @@
     ctx.fillStyle = palette[0];
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     drawPreview();
-    Layer.set(ctx, ctx.canvas, orimonoData);
 
     // 一番下にスクロール
     // scrollHeight ページの高さ clientHeight ブラウザの高さ
@@ -228,11 +226,7 @@
     // 文字がにじむのでcanvaサイズを指定する
     document.getElementById('char').style.width = canvasWidth;
     document.getElementById('char').style.height = canvasHeight;
-    for (let i = 0; i < Layer.count(); i++) {
-      let layer = Layer.get(i).canvas;
-      layer.width = canvas.width;
-      layer.height = canvas.height;
-    }
+
     ctx.translate(1, canvas.height - 1); // 原点を左下に移動
     ctx.scale(1, -1); // 上記に伴いY軸の図り方を反転
     work.translate(1, canvas.height - 1); // 原点を左下に移動
@@ -280,9 +274,9 @@
 
   // グリッドの表示
   function grid() {
-      if (option.gridOn) {
-        drawGrid(work, option, orimonoData);
-      }
+    if (option.gridOn) {
+      drawGrid(work, option, orimonoData);
+    }
   }
 
   // グリッドの表示切替
@@ -347,6 +341,98 @@
     record();
     reverseSoshiki(ctx, charCtx, orimonoData, palette, option, paletteData);
     drawPreview();
+  }
+
+  // 印刷
+  async function print() {
+    // 子どもノードをすべて消す（プリントを押すたびに増えてしまうので）
+    // https://stackoverflow.com/questions/3955229/remove-all-child-elements-of-a-dom-node-in-javascript
+    document.getElementById('printArea').innerHTML = '';
+
+    // ctx,workは左下から数える
+    let w = (orimonoData.kihon_data[0].kihon_max_x + 1) * option.scale + 1;
+    let h = (orimonoData.kihon_data[0].kihon_max_y + 1) * option.scale + 1;
+    // charは右上から数える
+
+    let printCanvasElement = document.createElement('canvas');
+    let printCanvas = printCanvasElement.getContext('2d');
+    printCanvas.canvas.width = w;
+    printCanvas.canvas.height = h;
+
+    printCanvas.fillStyle = 'rgb( 255, 255, 255)';
+    printCanvas.fillRect(0, 0, w, h);
+
+    let y = ctx.canvas.height - h; // yは上からしか測れないdrawImage仕様のため。
+    let y2 = orimonoData.monsen_max_y * option.scale - h;
+
+    printCanvas.drawImage(ctx.canvas, 0, y, w, h, 0, 0, w, h);
+    printCanvas.drawImage(work.canvas, 0, y, w, h, 0, 0, w, h);
+    printCanvas.drawImage(charCtx.canvas, 0, y2 * 2, w * 2, h * 2, 0, 0, w, h); // charCtxは文字がにじまないようにcanvasサイズを2倍にしているので*2している
+
+    // デフォルト（option.zoom == 4）
+    let maxHeightDot = 32;
+    let maxWidthDot = 48;
+    if (option.zoom == 3) {
+      maxHeightDot = 40;
+      maxWidthDot = 60;
+    } else if (option.zoom == 2) {
+      maxHeightDot = 60;
+      maxWidthDot = 90;
+    } else if (option.zoom == 1) {
+      maxHeightDot = 80;
+      maxWidthDot = 120;
+    } else if (option.zoom == 0) {
+      maxHeightDot = 100;
+      maxWidthDot = 150;
+    } else if (option.zoom == 5) {
+      maxHeightDot = 24;
+      maxWidthDot = 36;
+    }
+    let heightCount = Math.ceil(
+      orimonoData.kihon_data[0].kihon_max_y / maxHeightDot
+    );
+    let widthCount = Math.ceil(
+      orimonoData.kihon_data[0].kihon_max_x / maxWidthDot
+    );
+    let printHeight = maxHeightDot * option.scale + 1;
+    let printWidth = maxWidthDot * option.scale + 1;
+
+    await (() => {
+      for (let i = 0; i < heightCount; i++) {
+        for (let j = 0; j < widthCount; j++) {
+          let tempElement = document.createElement('canvas');
+          let tempCanvas = tempElement.getContext('2d');
+          tempCanvas.canvas.width = 1050; // A4一枚に入る範囲としている
+          tempCanvas.canvas.height = 700; // A4一枚に入る範囲としている
+          tempCanvas.drawImage(
+            printCanvas.canvas,
+            printWidth * j,
+            h - printHeight - printHeight * i,
+            printWidth,
+            printHeight,
+            0,
+            0,
+            printWidth,
+            printHeight
+          );
+          let newImg = document.createElement('img');
+          newImg.src = tempElement.toDataURL();
+          document.getElementById('printArea').appendChild(newImg);
+        }
+      }
+    })();
+
+    // 画像としてダウンロード
+    // var image = printCanvas.canvas
+    //   .toDataURL('image/png')
+    //   .replace('image/png', 'image/octet-stream');
+    // window.location.href = image;
+
+    document.getElementById('content').style.width = ctx.canvas.width + 'px';
+    document.getElementById('content').style.height = ctx.canvas.height + 'px';
+    window.print();
+
+    return false;
   }
 
   function shift(x, y) {
@@ -533,7 +619,6 @@
   let left = canvas.getBoundingClientRect().left,
     top = canvas.getBoundingClientRect().top;
 
-  $.positionTop($('palette'), left + 420, top + 4);
   $.positionTop($('view'), left + 420, top + 300);
   $.hide($('palette'));
   $.hide($('view'));
@@ -543,7 +628,6 @@
   FileLoader.onload = (i, p) => {
     record();
     deselect();
-    clearLayer();
     orimonoData = i;
     paletteData = p;
     selection.orimonoData = createOrimonoData(
@@ -556,8 +640,6 @@
     drawOrimonoData(ctx, charCtx, orimonoData, palette, option, paletteData);
     grid();
     drawPreview();
-    Layer.clear();
-    Layer.set(ctx, ctx.canvas, orimonoData);
   };
   FileLoader.bind($('container'));
 
@@ -577,6 +659,7 @@
   $.bind($('fliph'), 'click', flipHorz);
   $.bind($('rotate'), 'click', rotateRight);
   $.bind($('reverse'), 'click', reverse);
+  $.bind($('print'), 'click', print);
 
   // スポイトツール
   $.bind($('dropper'), 'click', () => {
@@ -615,11 +698,6 @@
   $.bind($('open-button'), 'change', (e) => {
     FileLoader.load(e.target.files[0]);
     e.target.value = null;
-  });
-
-  $.bind($('layer'), 'click', () => {
-    $.toggle($('layers'));
-    $('layer').classList.toggle('selected');
   });
 
   $.bind($('tone'), 'click', toggleTool('tone'));
@@ -848,34 +926,7 @@
     $.show($('overlay'));
   }
 
-  Palette.change((e) => {
-    // パレットが変更された際のイベント
-    for (let i = 0; i < Layer.count(); i++) {
-      let layer = Layer.get(i);
-      if (e !== undefined) {
-        // 色の入れ替え
-        swapColor(layer.orimonoData, e[0], e[1]);
-      }
-      drawOrimonoData(
-        layer.ctx,
-        charCtx,
-        layer.orimonoData,
-        palette,
-        option,
-        paletteData,
-        Palette.getTransparentIndex()
-      );
-    }
-    drawPreview();
-  });
-
   Palette.setColor(1);
-  // palette = Palette.getPaletteData();
-
-  $.bind($('palette-opt'), 'click', () => {
-    record();
-    removeUnusedColor(orimonoData, paletteData);
-  });
 
   // 右クリック
   $.bind($('work'), 'contextmenu', (e) => {
@@ -1310,10 +1361,6 @@
     return false;
   });
 
-  let $layerList = $('layer-list'),
-    $templateLayer = $('layer-list-template'),
-    $currentLayer = $layerList.lastElementChild;
-
   // TODO vscodeのauto reloadと相性が悪いので一時的にコメントアウト
   // window.onbeforeunload = () => {
   // 	return 'ページを移動すると編集した情報が失われます';
@@ -1386,14 +1433,7 @@
 
   // ローカルストレージに保存
   function saveStorage(name) {
-    let layers = [];
-    for (let i = 0; i < Layer.count(); i++) {
-      let layer = Layer.get(i);
-      layers.push(Base64.encode(layer.orimonoData.data));
-    }
-
     let json = JSON.stringify({
-      orimonoData: layers,
       width: orimonoData.width,
       height: orimonoData.height,
       paletteData: Base64.encode(paletteData.data),
@@ -1409,18 +1449,9 @@
       let data = JSON.parse(json);
       record();
       deselect();
-      clearLayer();
       orimonoData = createOrimonoData(data.width, data.height);
       option.imageWidth = orimonoData.width;
-      Layer.clear();
-      Layer.set(ctx, ctx.canvas, orimonoData);
       Base64.decode(data.orimonoData[0], orimonoData.data);
-      for (let i = 1; i < data.orimonoData.length; i++) {
-        let layer = addLayer(data.width, data.height);
-        layer.canvas.width = ctx.canvas.width;
-        layer.canvas.height = ctx.canvas.height;
-        Base64.decode(data.orimonoData[i], layer.orimonoData.data);
-      }
       Base64.decode(data.paletteData, paletteData.data);
       selection.orimonoData = createOrimonoData(
         orimonoData.width,

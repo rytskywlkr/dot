@@ -25,8 +25,7 @@
         Color.rgb(255, 255, 128),
         Color.rgb(128, 255, 255),
         Color.rgb(255, 128, 255),
-      ],
-      nums = [];
+      ];
 
     // パレットの色を選択する
     function selectColor(index) {
@@ -35,7 +34,6 @@
     }
 
     function createPalette() {
-      console.log('palette-color click');
       $('palette-table').addEventListener(
         'click',
         (e) => {
@@ -43,7 +41,6 @@
             let parent = e.target.parentNode;
             let colors = parent.querySelectorAll('.palette-color');
             let color_index = Array.prototype.indexOf.call(colors, e.target);
-            console.log(selected);
             if (selected !== null) {
               selected.className = 'palette-color';
             }
@@ -90,13 +87,10 @@
         transparentIndex = index;
       },
 			setColor: (index) => {
-				console.log('setColor');
-        console.log(index);
         colorIndex = index;
         selectColor(index);
       },
       change: (f) => {
-        console.log('change');
         onchange = f;
       },
     };

@@ -182,12 +182,12 @@ function drawDotOrimono(ctx, x, y, orimonoData, paletteIndex, option) {
     drawDot(ctx, x, y, option.scale);
     orimonoData.osawari_data[x - orimonoData.osawari_min_x] = blackIndex;
   } else if (type == 'monsen-color') {
-    drawDot(ctx, x, y, option.scale, 1, paletteIndex);
-    orimonoData.monsen_color_data[x - orimonoData.monsen_color_min_x] =
+    drawDot(ctx, x, y, option.scale, 0, paletteIndex);
+    orimonoData.monsen_color_data[y - orimonoData.monsen_color_min_y] =
       paletteIndex;
   } else if (type == 'monsen-char') {
   } else if (type == 'hikikomi-color') {
-    drawDot(ctx, x, y, option.scale, 1, paletteIndex);
+    drawDot(ctx, x, y, option.scale, 0, paletteIndex);
     orimonoData.hikikomi_color_data[x - orimonoData.hikikomi_color_min_x] =
       paletteIndex;
   } else if (type == 'hikikomi-char') {
@@ -253,7 +253,7 @@ function clearDotOrimono(ctx, x, y, orimonoData, option) {
 }
 
 // ドットの表示
-function selectDot(ctx, x, y, scale, padding = 1) {
+function selectDot(ctx, x, y, scale, padding = 0) {
   let s = scale,
     b = s - padding;
   ctx.fillStyle = 'rgba(' + [0, 0, 255, 0.5] + ')';
@@ -261,20 +261,20 @@ function selectDot(ctx, x, y, scale, padding = 1) {
 }
 
 // ドットの表示
-function drawDot(ctx, x, y, scale, padding = 1, paletteIndex = 1) {
+function drawDot(ctx, x, y, scale, padding = 0, paletteIndex = 1) {
   ctx.fillStyle = Palette.getColorByIndex(paletteIndex);
   let s = scale,
     b = s - padding;
   ctx.fillRect(x * s + padding, y * s - padding, b, b);
 }
 
-function clearDot(ctx, x, y, scale, padding = 1) {
+function clearDot(ctx, x, y, scale, padding = 0) {
   let s = scale,
     b = s - padding;
   ctx.clearRect(x * s + padding, y * s - padding, b, b);
 }
 
-function clearDots(ctx, start_x, start_y, end_x, end_y, scale, padding = 1) {
+function clearDots(ctx, start_x, start_y, end_x, end_y, scale, padding = 0) {
   let s = scale,
     b = s - padding;
   for (let x = start_x; x <= end_x; x++) {
@@ -1203,7 +1203,7 @@ function drawOrimonoData(
         orimonoData.monsen_color_min_x,
         y + orimonoData.monsen_color_min_y,
         option.scale,
-        1,
+        0,
         paletteIndex
       );
     }
@@ -1217,6 +1217,21 @@ function drawOrimonoData(
         ctx,
         x + orimonoData.hikikomi_color_min_x,
         orimonoData.hikikomi_color_min_y,
+        option.scale,
+        0,
+        paletteIndex
+      );
+    }
+  }
+
+  // 筬割を描画
+  for (let x = 0; x < orimonoData.osawari_data.length; x++) {
+    let paletteIndex = orimonoData.osawari_data[x];
+    if (paletteIndex !== undefined) {
+      drawDot(
+        ctx,
+        x + orimonoData.osawari_min_x,
+        orimonoData.osawari_min_y,
         option.scale,
         1,
         paletteIndex
